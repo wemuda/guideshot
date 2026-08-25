@@ -39,5 +39,5 @@ export type {
   Recipe,
   VariantValue,
 } from './schemas.js';
-export { schemaFiles, writeSchemas } from './write-schemas.js';
+export { schemaFiles, verifySchemas, writeSchemas } from './write-schemas.js';
 export type { SchemaFileName } from './write-schemas.js';

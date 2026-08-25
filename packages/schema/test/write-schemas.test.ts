@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -9,6 +9,7 @@ import {
   PublicManifestSchema,
   RecipeSchema,
   schemaFiles,
+  verifySchemas,
   writeSchemas,
 } from '../src/index.js';
 
@@ -49,5 +50,18 @@ describe('writeSchemas', () => {
     expect(recipe).toEqual(JSON.parse(JSON.stringify(RecipeSchema)));
     expect((manifest as { $schema: string }).$schema).toBe(JSON_SCHEMA_DIALECT);
     expect((recipe as { $schema: string }).$schema).toBe(JSON_SCHEMA_DIALECT);
+    await expect(verifySchemas(directory)).resolves.toEqual(paths);
+  });
+
+  it('rejects invalid or stale schema artifacts', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'guideshot-schema-'));
+    temporaryDirectories.push(directory);
+
+    await writeSchemas(directory);
+    await writeFile(join(directory, 'recipe.schema.json'), '{}\n', 'utf8');
+
+    await expect(verifySchemas(directory)).rejects.toThrow(
+      'Schema artifact is stale',
+    );
   });
 });

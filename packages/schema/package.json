@@ -20,7 +20,7 @@
     "./schemas/*": "./dist/schemas/*"
   },
   "scripts": {
-    "build": "tsup src/index.ts src/write-schemas.ts --format esm --dts --clean --sourcemap && node dist/write-schemas.js dist/schemas",
+    "build": "tsup src/index.ts src/write-schemas.ts src/build-schemas.ts --format esm --dts --clean --sourcemap && node dist/build-schemas.js dist/schemas",
     "test": "vitest run --root ../.. packages/schema/test",
     "typecheck": "tsc --noEmit"
   },
