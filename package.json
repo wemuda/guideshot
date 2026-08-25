@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
+    "pack:check": "pnpm --filter './packages/**' -r build && pnpm --filter './packages/**' -r pack --dry-run",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "pnpm -r typecheck"

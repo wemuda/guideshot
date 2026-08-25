@@ -16,6 +16,7 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --sourcemap --clean",
+    "prepack": "pnpm run build && test -f dist/index.js && test -f dist/index.d.ts",
     "test": "vitest run --root ../.. packages/renderer/test",
     "typecheck": "tsc --noEmit"
   },

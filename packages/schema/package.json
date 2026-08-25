@@ -21,6 +21,7 @@
   },
   "scripts": {
     "build": "tsup src/index.ts src/write-schemas.ts src/build-schemas.ts --format esm --dts --clean --sourcemap && node dist/build-schemas.js dist/schemas",
+    "prepack": "pnpm run build && test -f dist/index.js && test -f dist/index.d.ts && test -f dist/write-schemas.js && test -f dist/schemas/recipe.schema.json && test -f dist/schemas/manifest.schema.json",
     "test": "vitest run --root ../.. packages/schema/test",
     "typecheck": "tsc --noEmit"
   },
