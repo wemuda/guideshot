@@ -228,9 +228,11 @@ After the initial `pnpm install`, run the site from the repository root with
 
 The sign-in fixture accepts `demo@guideshot.dev` and stores only a synthetic local session. The recipes route supports English, Danish, and Norwegian Bokmål, light and dark themes, and stable `data-guide-target` markers. It also includes a synthetic privacy target; pixel-level masking is covered by the controlled driver fixture without live customer data.
 
-The two pilot recipes publish eight committed assets at
+The two pilot recipes publish twelve committed assets at
 `apps/site/public/generated/guideshot`; the homepage consumes that public
-manifest directly as its dogfooding showcase.
+manifest directly as its dogfooding showcase. Inside the pilot, the bright Help
+button opens those same compiled screenshots as a guide and selects the exact
+English, Danish, or Norwegian Bokmål light/dark variant currently in use.
 
 The pilot is application code, not `@guideshot/react`, and its Vite-based runtime is not the future `@guideshot/vite` adapter.
 

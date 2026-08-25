@@ -16,6 +16,7 @@ import { type FormEvent, useEffect, useState } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DemoHelp } from '@/components/demo-help';
 import {
   Dialog,
   DialogClose,
@@ -45,16 +46,16 @@ import {
 } from '@/lib/demo';
 
 const recipeRows = [
-  ['Create a workspace', 'demo:admin', '6', 'ready'],
-  ['Invite a teammate', 'demo:admin', '6', 'ready'],
-  ['Update billing details', 'demo:owner', '4', 'draft'],
+  ['rowCreateWorkspace', 'demo:admin', '6', 'ready'],
+  ['rowInviteTeammate', 'demo:admin', '6', 'ready'],
+  ['rowBilling', 'demo:owner', '4', 'draft'],
 ] as const;
 
 const navigation = [
-  [BookOpen, 'Overview'],
-  [FileText, 'Recipes'],
-  [FolderArchive, 'Collections'],
-  [Settings, 'Settings'],
+  [BookOpen, 'overview'],
+  [FileText, 'recipes'],
+  [FolderArchive, 'collections'],
+  [Settings, 'settings'],
 ] as const;
 
 export default function RecipesPage() {
@@ -125,14 +126,14 @@ export default function RecipesPage() {
                 type="button"
               >
                 <Icon className="size-4" />
-                {label}
+                {copy[label]}
               </button>
             ))}
           </nav>
           <div className="border-t border-border p-4 text-[11px] leading-5 text-muted-foreground">
-            Deterministic local fixture
+            {copy.deterministicFixture}
             <br />
-            Schema version 1
+            {copy.schemaVersion}
           </div>
         </aside>
 
@@ -146,13 +147,15 @@ export default function RecipesPage() {
                 G
               </span>
               <div>
-                <p className="text-sm font-semibold">Docs workspace</p>
-                <p className="text-xs text-muted-foreground">Capture fixture</p>
+                <p className="text-sm font-semibold">{copy.docsWorkspace}</p>
+                <p className="text-xs text-muted-foreground">
+                  {copy.captureFixture}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
               <label className="sr-only" htmlFor="demo-locale">
-                Locale
+                {copy.language}
               </label>
               <select
                 className="h-9 rounded-full border border-border bg-background px-3 text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -167,7 +170,9 @@ export default function RecipesPage() {
                 <option value="nb">NB</option>
               </select>
               <Button
-                aria-label={`Use ${theme === 'light' ? 'dark' : 'light'} theme`}
+                aria-label={
+                  theme === 'light' ? copy.useDarkTheme : copy.useLightTheme
+                }
                 onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                 size="icon"
                 variant="ghost"
@@ -264,8 +269,12 @@ export default function RecipesPage() {
                         defaultValue="demo:admin"
                         id="recipe-scenario"
                       >
-                        <option value="demo:admin">Authenticated admin</option>
-                        <option value="demo:owner">Authenticated owner</option>
+                        <option value="demo:admin">
+                          {copy.authenticatedAdmin}
+                        </option>
+                        <option value="demo:owner">
+                          {copy.authenticatedOwner}
+                        </option>
                       </select>
                     </div>
                     <div
@@ -274,7 +283,7 @@ export default function RecipesPage() {
                     >
                       <span className="font-semibold">{copy.matrix}</span>
                       <span className="text-muted-foreground">
-                        3 locales × 2 themes = 6 variants
+                        {copy.matrixSummary}
                       </span>
                     </div>
                     <DialogFooter>
@@ -310,7 +319,9 @@ export default function RecipesPage() {
                 <TableBody>
                   {recipeRows.map(([name, scenario, variants, status]) => (
                     <TableRow key={name}>
-                      <TableCell className="font-semibold">{name}</TableCell>
+                      <TableCell className="font-semibold">
+                        {copy[name]}
+                      </TableCell>
                       <TableCell>
                         <code className="rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
                           {scenario}
@@ -332,11 +343,12 @@ export default function RecipesPage() {
               </Table>
             </div>
             <p className="mt-4 text-xs text-muted-foreground">
-              Fixed fixture data · no network requests · no timestamps
+              {copy.fixedFixtureData}
             </p>
           </section>
         </div>
       </div>
+      <DemoHelp locale={locale} theme={theme} />
     </main>
   );
 }

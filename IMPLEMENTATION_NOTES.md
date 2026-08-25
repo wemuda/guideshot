@@ -54,8 +54,11 @@ should capture decisions, not duplicate the full product specification.
 - Custom `invoke` actions are deferred until there is a real typed registration
   and execution contract; the Phase 1 schema rejects them.
 - The pilot owns two recipes: a simple sign-in state and an authenticated recipe
-  dialog prepared entirely by a scenario. English and Danish across light and
-  dark themes produce eight committed 1200 by 900 WebP assets.
+  dialog prepared entirely by a scenario. English, Danish, and Norwegian Bokmål
+  across light and dark themes produce twelve committed 1200 by 900 WebP assets.
+- The pilot reads those assets back through a prominent in-product Help
+  carousel, selecting the exact active locale and theme from the public
+  manifest.
 - The site imports the committed public manifest at build time. Its ordinary
   production build does not start an application server, prepare a scenario, or
   open a browser.

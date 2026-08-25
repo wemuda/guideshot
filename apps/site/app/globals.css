@@ -73,6 +73,10 @@ html[data-guideshot-capture='true'] *::after {
   transition-duration: 0.001ms !important;
 }
 
+html[data-guideshot-capture='true'] [data-guide-product-help] {
+  display: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

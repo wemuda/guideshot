@@ -6,7 +6,7 @@ const PILOT_ORIGIN = 'http://localhost:3000';
 
 const locale = defineDimension({
   name: 'pilot:locale',
-  version: '1.0.0',
+  version: '1.1.0',
   apiVersion: 1,
   values: ['en', 'da', 'nb'] as const,
   resolve(value: 'en' | 'da' | 'nb') {

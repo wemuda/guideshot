@@ -3,39 +3,44 @@
 import {
   CheckCircle2,
   LockKeyhole,
+  Moon,
   ScanSearch,
   ShieldCheck,
+  Sun,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 
 import { Brand } from '@/components/brand';
+import { DemoHelp } from '@/components/demo-help';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useDemoPreferences } from '@/hooks/use-demo-preferences';
-import { DEMO_EMAIL, DEMO_SESSION_KEY } from '@/lib/demo';
+import {
+  DEMO_EMAIL,
+  DEMO_SESSION_KEY,
+  demoCopy,
+  type DemoLocale,
+} from '@/lib/demo';
 
-const promises = [
-  [LockKeyhole, 'Deterministic state'],
-  [ScanSearch, 'Stable DOM targets'],
-  [ShieldCheck, 'No live customer data'],
-] as const;
+const promiseIcons = [LockKeyhole, ScanSearch, ShieldCheck] as const;
 
 export default function DemoSignInPage() {
   const router = useRouter();
-  const { ready } = useDemoPreferences();
+  const { locale, ready, setLocale, setTheme, theme } = useDemoPreferences();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const copy = demoCopy[locale];
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (email.trim().toLowerCase() !== DEMO_EMAIL) {
-      setError(`Use the deterministic account: ${DEMO_EMAIL}`);
+      setError(`${copy.authInvalidEmail}: ${DEMO_EMAIL}`);
       return;
     }
 
@@ -56,30 +61,63 @@ export default function DemoSignInPage() {
     <main className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex h-20 max-w-6xl items-center justify-between px-5 sm:px-8">
         <Brand />
-        <Button asChild size="sm" variant="ghost">
-          <Link href="/">Exit pilot</Link>
-        </Button>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <label className="sr-only" htmlFor="sign-in-locale">
+            {copy.language}
+          </label>
+          <select
+            className="h-9 rounded-full border border-border bg-background px-3 text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            id="sign-in-locale"
+            onChange={(event) => setLocale(event.target.value as DemoLocale)}
+            value={locale}
+          >
+            <option value="en">EN</option>
+            <option value="da">DA</option>
+            <option value="nb">NB</option>
+          </select>
+          <Button
+            aria-label={
+              theme === 'light' ? copy.useDarkTheme : copy.useLightTheme
+            }
+            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            size="icon"
+            variant="ghost"
+          >
+            {theme === 'light' ? (
+              <Moon className="size-4" />
+            ) : (
+              <Sun className="size-4" />
+            )}
+          </Button>
+          <Button
+            asChild
+            className="hidden sm:inline-flex"
+            size="sm"
+            variant="ghost"
+          >
+            <Link href="/">{copy.exitPilot}</Link>
+          </Button>
+        </div>
       </header>
       <div className="mx-auto grid min-h-[calc(100vh-80px)] max-w-6xl items-center gap-8 px-5 pb-16 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
         <div className="order-2 lg:order-1">
-          <Badge variant="primary">GuideShot Studio · Pilot fixture</Badge>
+          <Badge variant="primary">{copy.authBadge}</Badge>
           <h1 className="mt-6 max-w-lg text-balance text-4xl font-semibold tracking-[-0.055em] sm:text-5xl">
-            A real app state, made safe to reproduce.
+            {copy.authHeadline}
           </h1>
           <p className="mt-5 max-w-md leading-7 text-muted-foreground">
-            This small workspace proves that authentication and application
-            state can stay in a typed adapter—never in the recipe.
+            {copy.authIntro}
           </p>
           <div className="mt-9 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-            {promises.map(([Icon, text]) => (
+            {promiseIcons.map((Icon, index) => (
               <div
                 className="flex items-center gap-3 text-sm font-medium"
-                key={text}
+                key={copy.authPromises[index]}
               >
                 <span className="grid size-9 place-items-center rounded-xl border border-border bg-card">
                   <Icon className="size-4 text-primary" />
                 </span>
-                {text}
+                {copy.authPromises[index]}
               </div>
             ))}
           </div>
@@ -94,20 +132,19 @@ export default function DemoSignInPage() {
               <CheckCircle2 className="size-5" />
             </span>
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary">
-              GuideShot Studio · Pilot fixture
+              {copy.authBadge}
             </p>
             <h2 className="text-2xl font-semibold tracking-[-0.04em]">
-              Sign in to the demo workspace
+              {copy.authSignInTitle}
             </h2>
             <p className="text-sm leading-6 text-muted-foreground">
-              Use the deterministic account to explore a capture-ready
-              authenticated state.
+              {copy.authSignInDescription}
             </p>
           </CardHeader>
           <CardContent>
             <form className="space-y-5" onSubmit={submit}>
               <div className="space-y-2">
-                <Label htmlFor="demo-email">Work email</Label>
+                <Label htmlFor="demo-email">{copy.authWorkEmail}</Label>
                 <Input
                   aria-describedby={error ? 'demo-email-error' : undefined}
                   aria-invalid={Boolean(error)}
@@ -134,7 +171,7 @@ export default function DemoSignInPage() {
               </div>
               <div className="grid gap-2">
                 <Button data-guide-target="auth.submit" size="lg" type="submit">
-                  Continue
+                  {copy.authContinue}
                 </Button>
                 <Button
                   data-guide-target="auth.demo-account"
@@ -145,16 +182,17 @@ export default function DemoSignInPage() {
                   type="button"
                   variant="outline"
                 >
-                  Use demo account
+                  {copy.authUseDemoAccount}
                 </Button>
               </div>
               <p className="text-center text-xs text-muted-foreground">
-                No credentials leave this browser.
+                {copy.authPrivacy}
               </p>
             </form>
           </CardContent>
         </Card>
       </div>
+      <DemoHelp locale={locale} theme={theme} />
     </main>
   );
 }

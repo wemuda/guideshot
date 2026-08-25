@@ -13,7 +13,7 @@
   },
   "matrix": {
     "dimensions": {
-      "locale": ["en", "da"],
+      "locale": ["en", "da", "nb"],
       "theme": ["light", "dark"]
     }
   },
@@ -27,7 +27,8 @@
       "target": "recipe.name",
       "value": {
         "en": "Invite a teammate",
-        "da": "Inviter en kollega"
+        "da": "Inviter en kollega",
+        "nb": "Inviter en kollega"
       }
     }
   ],
@@ -62,7 +63,8 @@
       "target": "recipe.name",
       "content": {
         "en": "Give the recipe a stable name.",
-        "da": "Giv opskriften et stabilt navn."
+        "da": "Giv opskriften et stabilt navn.",
+        "nb": "Gi oppskriften et stabilt navn."
       },
       "placement": {
         "side": "auto",
@@ -81,7 +83,8 @@
   "accessibility": {
     "alt": {
       "en": "The new recipe dialog with the recipe name field highlighted.",
-      "da": "Dialogen til en ny opskrift med opskriftens navnefelt fremhævet."
+      "da": "Dialogen til en ny opskrift med opskriftens navnefelt fremhævet.",
+      "nb": "Dialogen for en ny oppskrift med navnefeltet fremhevet."
     }
   },
   "output": {

@@ -10,7 +10,7 @@
   },
   "matrix": {
     "dimensions": {
-      "locale": ["en", "da"],
+      "locale": ["en", "da", "nb"],
       "theme": ["light", "dark"]
     }
   },
@@ -48,7 +48,8 @@
       "target": "auth.email",
       "content": {
         "en": "Enter the deterministic demo account.",
-        "da": "Indtast den deterministiske demokonto."
+        "da": "Indtast den deterministiske demokonto.",
+        "nb": "Skriv inn den deterministiske demokontoen."
       },
       "placement": {
         "side": "auto",
@@ -67,7 +68,8 @@
   "accessibility": {
     "alt": {
       "en": "The GuideShot Studio sign-in form with the work email field highlighted.",
-      "da": "GuideShot Studio-loginformularen med arbejdsmailfeltet fremhævet."
+      "da": "GuideShot Studio-loginformularen med arbejdsmailfeltet fremhævet.",
+      "nb": "GuideShot Studio-innloggingsskjemaet med jobb-e-postfeltet fremhevet."
     }
   },
   "output": {
