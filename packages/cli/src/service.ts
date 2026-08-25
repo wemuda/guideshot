@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 
 import {
   createAssetPath,
-  createCompositionHash,
+  createJobCompositionHash,
   diagnosticFromUnknown,
   GuideShotError,
   interpolate,
@@ -37,6 +37,7 @@ import {
   mergeManifest,
   OutputTransaction,
   readExistingManifest,
+  type ManifestReplacementScope,
 } from './publication.js';
 import { ensureServer, type ServerHandle } from './server.js';
 import type {
@@ -219,7 +220,6 @@ export class GuideShotService {
             resolved.recipe,
             cached,
             renderer,
-            context.config,
           );
           await transaction.stage(composition.staged);
           composed.push({
@@ -238,14 +238,15 @@ export class GuideShotService {
       await server.close();
       server = undefined;
 
-      const existing = await readExistingManifest(context.outputDir);
-      const selected = new Set(
-        plan.jobs.map((job) => jobIdentity(job.recipeId, job.variantKey)),
-      );
+      const replacementScope = manifestReplacementScope(plan, options);
+      const existing =
+        replacementScope.mode === 'all'
+          ? undefined
+          : await readExistingManifest(context.outputDir);
       const manifest = mergeManifest(
         existing,
         composed.map(({ staged }) => staged.manifest),
-        selected,
+        replacementScope,
       );
       await transaction.commit(manifest);
       return successReport(
@@ -284,27 +285,22 @@ export class GuideShotService {
         const cached = await cache.read(job.captureKey);
         assertSceneIdentity(cached.scene, job);
         const recipe = await resolveCachedRecipe(job, context.config, cached);
-        const composition = await composeJob(
-          job,
-          recipe,
-          cached,
-          renderer,
-          context.config,
-        );
+        const composition = await composeJob(job, recipe, cached, renderer);
         await transaction.stage(composition.staged);
         composed.push(composition);
       }
 
       await closeRenderer(renderer);
       renderer = undefined;
-      const existing = await readExistingManifest(context.outputDir);
-      const selected = new Set(
-        plan.jobs.map((job) => jobIdentity(job.recipeId, job.variantKey)),
-      );
+      const replacementScope = manifestReplacementScope(plan, options);
+      const existing =
+        replacementScope.mode === 'all'
+          ? undefined
+          : await readExistingManifest(context.outputDir);
       const manifest = mergeManifest(
         existing,
         composed.map(({ staged }) => staged.manifest),
-        selected,
+        replacementScope,
       );
       await transaction.commit(manifest);
       return successReport(
@@ -408,20 +404,11 @@ async function composeJob(
   recipe: Recipe,
   cached: CachedScene,
   renderer: RendererRun,
-  config: GuideShotConfig,
 ): Promise<ComposedJob> {
   const output = compositionOutput(recipe);
   const annotations = resolvedAnnotations(recipe);
   const alt = resolvedAlt(recipe);
-  const compositionKey = createCompositionHash({
-    version: 1,
-    sceneHash: cached.sceneHash,
-    annotations,
-    alt,
-    output,
-    theme: cached.scene.theme,
-    renderer: { name: config.renderer.name, version: config.renderer.version },
-  });
+  const compositionKey = createJobCompositionHash(job, cached.sceneHash);
   const rendered = await renderer.render({
     scene: cached.scene,
     background: cached.background,
@@ -638,6 +625,44 @@ function mergeDimensions(
     result[name] = value;
   }
   return result;
+}
+
+function manifestReplacementScope(
+  plan: Plan,
+  selection: CommandOptions,
+): ManifestReplacementScope {
+  const hasDimensionFilter =
+    Object.keys(selection.dimensions ?? {}).length > 0 ||
+    (selection.dimensionArguments?.length ?? 0) > 0;
+  if (hasDimensionFilter) {
+    return {
+      mode: 'variants',
+      jobKeys: new Set(
+        plan.jobs.map((job) => jobIdentity(job.recipeId, job.variantKey)),
+      ),
+    };
+  }
+
+  if (selection.ids !== undefined || selection.tags !== undefined) {
+    return {
+      mode: 'recipes',
+      recipeIds: new Set(
+        plan.recipes
+          .filter(
+            ({ recipe }) =>
+              (selection.ids === undefined ||
+                selection.ids.includes(recipe.id)) &&
+              (selection.tags === undefined ||
+                selection.tags.every(
+                  (tag) => recipe.tags?.includes(tag) === true,
+                )),
+          )
+          .map(({ recipe }) => recipe.id),
+      ),
+    };
+  }
+
+  return { mode: 'all' };
 }
 
 function plannedReports(plan: Plan): JobReport[] {

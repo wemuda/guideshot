@@ -1,6 +1,7 @@
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
+import { createJobCompositionHash, planProject } from '@guideshot/core';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { createGuideShotService } from '../src/service.js';
@@ -83,6 +84,10 @@ describe('GuideShotService', () => {
     const pointer = JSON.parse(
       await readFile(path.join(captureDir, 'current.json'), 'utf8'),
     ) as { sceneHash: string };
+    const plan = await planProject(fixture.config, fixture.root);
+    expect(captured.jobs[0]?.compositionKey).toBe(
+      createJobCompositionHash(plan.jobs[0]!, pointer.sceneHash),
+    );
     expect(new Set(await readdir(captureDir))).toEqual(
       new Set(['current.json', pointer.sceneHash]),
     );
@@ -154,6 +159,102 @@ describe('GuideShotService', () => {
     expect(publicText).not.toContain('safeVariables');
     expect(publicText).not.toContain('targets');
     expect(publicText).not.toContain('environment');
+  });
+
+  it('replaces the full manifest when an unfiltered matrix shrinks', async () => {
+    const fixture = await createFixture(
+      fixtureRecipe({ matrix: { dimensions: { mode: ['basic', 'pro'] } } }),
+    );
+    roots.push(fixture.root);
+    const service = createGuideShotService({
+      cwd: fixture.root,
+      config: fixture.config,
+      fetch: fixture.fetch,
+    });
+
+    expect((await service.capture()).jobs).toHaveLength(2);
+    await writeRecipe(fixture.recipeFile, fixtureRecipe());
+
+    const captured = await service.capture();
+    const manifest = await readManifest(fixture.root);
+
+    expect(captured.ok).toBe(true);
+    expect(Object.keys(manifest.entries[0]?.variants ?? {})).toEqual([
+      'mode=basic',
+    ]);
+  });
+
+  it('replaces every variant for tag-selected recipes while retaining other recipes', async () => {
+    const fixture = await createFixture(
+      fixtureRecipe({ matrix: { dimensions: { mode: ['basic', 'pro'] } } }),
+    );
+    roots.push(fixture.root);
+    await writeRecipe(
+      path.join(fixture.root, 'other.shot.json'),
+      fixtureRecipe({
+        id: 'other.recipe',
+        title: 'Other recipe',
+        tags: ['other'],
+        matrix: { dimensions: { mode: ['basic', 'pro'] } },
+      }),
+    );
+    const service = createGuideShotService({
+      cwd: fixture.root,
+      config: fixture.config,
+      fetch: fixture.fetch,
+    });
+
+    expect((await service.capture()).jobs).toHaveLength(4);
+    await writeRecipe(fixture.recipeFile, fixtureRecipe());
+
+    const captured = await service.capture({ tags: ['docs'] });
+    const manifest = await readManifest(fixture.root);
+
+    expect(captured.ok).toBe(true);
+    expect(Object.keys(variantsFor(manifest, 'account.balance'))).toEqual([
+      'mode=basic',
+    ]);
+    expect(Object.keys(variantsFor(manifest, 'other.recipe'))).toEqual([
+      'mode=basic',
+      'mode=pro',
+    ]);
+  });
+
+  it('preserves unselected variants for explicit dimension filters', async () => {
+    const fixture = await createFixture(
+      fixtureRecipe({
+        title: 'Original title',
+        matrix: { dimensions: { mode: ['basic', 'pro'] } },
+        accessibility: { alt: 'Original balance' },
+      }),
+    );
+    roots.push(fixture.root);
+    const service = createGuideShotService({
+      cwd: fixture.root,
+      config: fixture.config,
+      fetch: fixture.fetch,
+    });
+    expect((await service.capture()).jobs).toHaveLength(2);
+    await writeRecipe(
+      fixture.recipeFile,
+      fixtureRecipe({
+        title: 'Updated title',
+        matrix: { dimensions: { mode: ['basic', 'pro'] } },
+        accessibility: { alt: 'Updated balance' },
+      }),
+    );
+
+    const composed = await service.compose({
+      dimensionArguments: ['mode=basic'],
+    });
+    const manifest = await readManifest(fixture.root);
+    const variants = variantsFor(manifest, 'account.balance');
+
+    expect(composed.ok).toBe(true);
+    expect(composed.jobs).toHaveLength(1);
+    expect(manifest.entries[0]?.title).toBe('Updated title');
+    expect(variants['mode=basic']?.alt).toBe('Updated balance');
+    expect(variants['mode=pro']?.alt).toBe('Original balance');
   });
 
   it('leaves the published manifest untouched when composition fails', async () => {
@@ -228,3 +329,27 @@ describe('GuideShotService', () => {
     expect(verified.diagnostics[0]?.code).toBe('MANIFEST_INVALID');
   });
 });
+
+interface TestManifest {
+  readonly entries: readonly {
+    readonly id: string;
+    readonly title?: string;
+    readonly variants: Readonly<Record<string, { readonly alt: string }>>;
+  }[];
+}
+
+async function readManifest(root: string): Promise<TestManifest> {
+  return JSON.parse(
+    await readFile(path.join(root, 'public/guideshot/manifest.json'), 'utf8'),
+  ) as TestManifest;
+}
+
+function variantsFor(
+  manifest: TestManifest,
+  recipeId: string,
+): TestManifest['entries'][number]['variants'] {
+  const entry = manifest.entries.find((candidate) => candidate.id === recipeId);
+  if (entry === undefined)
+    throw new Error(`Missing manifest entry "${recipeId}".`);
+  return entry.variants;
+}

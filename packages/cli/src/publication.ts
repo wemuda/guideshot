@@ -25,6 +25,11 @@ export interface StagedAsset {
   readonly bytes: Uint8Array;
 }
 
+export type ManifestReplacementScope =
+  | { readonly mode: 'all' }
+  | { readonly mode: 'recipes'; readonly recipeIds: ReadonlySet<string> }
+  | { readonly mode: 'variants'; readonly jobKeys: ReadonlySet<string> };
+
 export class OutputTransaction {
   readonly #outputDir: string;
   readonly #stagingDir: string;
@@ -121,21 +126,45 @@ export async function readExistingManifest(
 export function mergeManifest(
   existing: PublicManifest | undefined,
   replacements: readonly ManifestAssetInput[],
-  selectedKeys: ReadonlySet<string>,
+  scope: ManifestReplacementScope,
 ): PublicManifest {
+  const replacementTitles = new Map(
+    replacements.map((replacement) => [
+      replacement.recipeId,
+      replacement.title,
+    ]),
+  );
   const retained: ManifestAssetInput[] = [];
   for (const entry of existing?.entries ?? []) {
     for (const [variantKey, variant] of Object.entries(entry.variants)) {
-      if (selectedKeys.has(jobIdentity(entry.id, variantKey))) continue;
+      if (replacesVariant(scope, entry.id, variantKey)) continue;
+      const title = replacementTitles.has(entry.id)
+        ? replacementTitles.get(entry.id)
+        : entry.title;
       retained.push({
         recipeId: entry.id,
-        ...(entry.title === undefined ? {} : { title: entry.title }),
+        ...(title === undefined ? {} : { title }),
         variantKey,
         ...variant,
       });
     }
   }
   return buildPublicManifest([...retained, ...replacements]);
+}
+
+function replacesVariant(
+  scope: ManifestReplacementScope,
+  recipeId: string,
+  variantKey: string,
+): boolean {
+  switch (scope.mode) {
+    case 'all':
+      return true;
+    case 'recipes':
+      return scope.recipeIds.has(recipeId);
+    case 'variants':
+      return scope.jobKeys.has(jobIdentity(recipeId, variantKey));
+  }
 }
 
 export function jobIdentity(recipeId: string, variantKey: string): string {
