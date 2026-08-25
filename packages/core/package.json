@@ -1,0 +1,37 @@
+{
+  "name": "@guideshot/core",
+  "version": "0.1.0",
+  "description": "Portable compiler and contracts for GuideShot.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "test": "vitest run --root ../.. packages/core/test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@guideshot/schema": "workspace:*",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "fast-glob": "^3.3.3",
+    "jsonc-parser": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
