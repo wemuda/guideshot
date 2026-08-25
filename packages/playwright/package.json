@@ -1,0 +1,35 @@
+{
+  "name": "@guideshot/playwright",
+  "version": "0.1.0",
+  "description": "Chromium capture driver for GuideShot.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean --sourcemap",
+    "test": "vitest run --root ../.. packages/playwright/test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@guideshot/core": "workspace:*",
+    "playwright": "^1.62.1"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
