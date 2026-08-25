@@ -12,6 +12,7 @@ export default tseslint.config(
       '**/.vinext/**',
       '**/.wrangler/**',
       '**/node_modules/**',
+      '**/eslint.config.mjs',
     ],
   },
   eslint.configs.recommended,
