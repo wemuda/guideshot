@@ -15,4 +15,4 @@ import { createGuideShotService } from '@guideshot/cli';
 const report = await createGuideShotService({ cwd: process.cwd() }).plan();
 ```
 
-Requires Node.js 20 or newer. Licensed under the MIT License.
+Requires Node.js 20.5 or newer. Licensed under the MIT License.

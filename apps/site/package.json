@@ -12,6 +12,7 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "tsc --noEmit",
     "shots:validate": "guideshot validate",
+    "shots:schema": "guideshot schema",
     "shots:plan": "guideshot plan",
     "shots:capture": "guideshot capture",
     "shots:compose": "guideshot compose",

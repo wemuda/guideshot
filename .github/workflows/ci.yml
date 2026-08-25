@@ -76,6 +76,9 @@ jobs:
       - name: Validate pilot recipes
         run: pnpm --filter @guideshot/site run shots:validate
 
+      - name: Generate portable schemas
+        run: pnpm --filter @guideshot/site run shots:schema
+
       - name: Plan pilot captures
         run: pnpm --filter @guideshot/site run shots:plan
 
