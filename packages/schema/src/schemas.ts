@@ -38,10 +38,6 @@ const ScenarioJsonObjectSchema = Type.Record(
   Type.String(),
   createJsonValueSchema('scenario-json-value'),
 );
-const InvokeJsonObjectSchema = Type.Record(
-  Type.String(),
-  createJsonValueSchema('invoke-json-value'),
-);
 const MessageArgumentSchema = Type.Union([
   Type.Null(),
   Type.Boolean(),
@@ -180,15 +176,6 @@ const WaitForActionSchema = Type.Object(
   StrictObjectOptions,
 );
 
-const InvokeActionSchema = Type.Object(
-  {
-    do: Type.Literal('invoke'),
-    use: IdentifierSchema,
-    with: Type.Optional(InvokeJsonObjectSchema),
-  },
-  StrictObjectOptions,
-);
-
 export const ActionSchema = Type.Union([
   ClickActionSchema,
   FillActionSchema,
@@ -203,7 +190,6 @@ export const ActionSchema = Type.Union([
   UploadActionSchema,
   DragActionSchema,
   WaitForActionSchema,
-  InvokeActionSchema,
 ]);
 export type Action = Static<typeof ActionSchema>;
 

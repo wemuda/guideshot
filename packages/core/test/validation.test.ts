@@ -31,6 +31,15 @@ describe('recipe validation', () => {
     );
   });
 
+  it('rejects unsupported custom actions at the schema boundary', () => {
+    expect(() =>
+      validateRecipe({
+        ...recipe(),
+        prepare: [{ do: 'invoke', use: 'demo:reset-clock', with: { hour: 9 } }],
+      }),
+    ).toThrowError(expect.objectContaining({ code: 'RECIPE_SCHEMA_INVALID' }));
+  });
+
   it('rejects unregistered profiles, dimensions, and scenarios', () => {
     expect(() =>
       validateRecipeSemantics(

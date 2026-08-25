@@ -63,7 +63,6 @@ export const fullRecipe = {
     { do: 'upload', target: 'recipe.logo', files: ['fixtures/logo.png'] },
     { do: 'drag', target: 'recipe.card', to: 'recipe.archive' },
     { do: 'waitFor', target: 'recipe.form', state: 'visible' },
-    { do: 'invoke', use: 'pilot:reset-clock', with: { hour: 9 } },
     { do: 'clear', target: 'recipe.search' },
   ],
   ready: [

@@ -152,7 +152,6 @@ export function validateRecipeSemantics(
   validateScenario(recipe, source, config);
   validateMatrix(recipe, source, config);
   validateAnnotationIds(recipe, source);
-  validateInvocations(recipe, source);
 }
 
 export function defaultProfileName(config: GuideShotConfig): string {
@@ -250,18 +249,6 @@ function validateAnnotationIds(recipe: Recipe, source: RecipeSource): void {
       );
     }
     ids.add(annotation.id);
-  }
-}
-
-function validateInvocations(recipe: Recipe, source: RecipeSource): void {
-  for (const action of recipe.prepare ?? []) {
-    if (action.do === 'invoke') {
-      throw new GuideShotError(
-        'EXTENSION_NOT_REGISTERED',
-        `Custom action "${action.use}" is not registered.`,
-        recipeOptions(source, { action: action.use }),
-      );
-    }
   }
 }
 

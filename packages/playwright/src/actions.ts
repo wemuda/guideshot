@@ -113,12 +113,6 @@ async function executeAction(
       }
       return;
     }
-    case 'invoke':
-      throw new GuideShotError(
-        'EXTENSION_NOT_REGISTERED',
-        `Custom action "${action.use}" must be handled by a project adapter.`,
-        { ...context, details: { action: action.use } },
-      );
   }
 }
 

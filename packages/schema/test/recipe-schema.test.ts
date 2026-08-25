@@ -112,6 +112,14 @@ describe('RecipeSchema', () => {
     expect(
       isRecipe({
         ...minimalRecipe,
+        prepare: [
+          { do: 'invoke', use: 'pilot:reset-clock', with: { hour: 9 } },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      isRecipe({
+        ...minimalRecipe,
         ready: [{ expect: 'count', target: 'row', count: -1 }],
       }),
     ).toBe(false);
