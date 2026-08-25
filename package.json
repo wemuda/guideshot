@@ -6,6 +6,13 @@
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@10.30.3",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "22.18.0",
+      "onFail": "download"
+    }
+  },
   "engines": {
     "node": ">=22.13.0"
   },

@@ -4,7 +4,9 @@ Thanks for helping make reproducible documentation screenshots portable and safe
 
 ## Set up
 
-The reusable packages support Node.js 20 or newer. Use Node.js 22.13 or newer for the full workspace and pilot site.
+The reusable packages support Node.js 20 or newer. The workspace pins Node.js
+22.18 for scripts; pnpm 10.14 or newer downloads it automatically during
+`pnpm install`. If you use a version manager, load the version in `.nvmrc`.
 
 ```sh
 pnpm install

@@ -34,6 +34,11 @@ The dependency boundary is intentional. Core does not import Playwright, Vite, R
 - pnpm 10
 - Playwright Chromium
 
+The workspace pins Node.js 22.18 for project scripts. With pnpm 10.14 or newer,
+`pnpm install` downloads that runtime automatically when the active shell is
+using an older Node.js release. `.nvmrc` provides the same version for users who
+prefer a version manager.
+
 Set up a checkout:
 
 ```sh
@@ -212,7 +217,8 @@ Capture and composition use separate identities. Changing page state, actions, f
 
 ## Pilot application
 
-Run the site with `pnpm dev`, then open:
+After the initial `pnpm install`, run the site from the repository root with
+`pnpm dev`, then open:
 
 - `/` — project homepage
 - `/docs` — Phase 1 documentation

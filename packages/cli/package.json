@@ -9,7 +9,12 @@
     "dist"
   ],
   "bin": {
-    "guideshot": "./dist/bin.js"
+    "guideshot": "./bin/guideshot.mjs"
+  },
+  "publishConfig": {
+    "bin": {
+      "guideshot": "./dist/bin.js"
+    }
   },
   "exports": {
     ".": {
