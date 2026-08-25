@@ -3,19 +3,43 @@
 :root {
   --background: #f7f3eb;
   --foreground: #111318;
+  --card: #fffdf8;
+  --card-foreground: #111318;
   --muted-foreground: #676962;
+  --muted: #ebe7df;
   --secondary: #ebe7df;
   --border: #d9d4ca;
+  --input: #cfc9be;
   --primary: #1748e6;
+  --destructive: #b42318;
+}
+
+html[data-theme='dark'] {
+  --background: #0d1118;
+  --foreground: #f4f0e7;
+  --card: #141923;
+  --card-foreground: #f4f0e7;
+  --muted-foreground: #a8a79f;
+  --muted: #222936;
+  --secondary: #222936;
+  --border: #303846;
+  --input: #414a59;
+  --primary: #6f91ff;
+  --destructive: #ff8179;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
   --color-secondary: var(--secondary);
   --color-border: var(--border);
+  --color-input: var(--input);
   --color-primary: var(--primary);
+  --color-destructive: var(--destructive);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -29,6 +53,7 @@ html {
 }
 
 body {
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
@@ -36,4 +61,22 @@ body {
 
 ::selection {
   background: color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+html[data-guideshot-capture='true'] *,
+html[data-guideshot-capture='true'] *::before,
+html[data-guideshot-capture='true'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  caret-color: transparent !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.001ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
 }
