@@ -1,5 +1,7 @@
 import { Buffer } from 'node:buffer';
 
+import { GuideShotError } from '@guideshot/core';
+
 import type { CapturedScene, CompositionRequest, Rect } from './contracts.js';
 import type {
   NormalizedAnnotation,
@@ -72,22 +74,24 @@ export function resolveOutputSize(
   const density = scene.viewport.pixelRatio;
   assertPositive(density, 'scene.viewport.pixelRatio');
 
-  const width = requestedWidth !== undefined
-    ? checkedDimension(requestedWidth, 'output.width')
-    : requestedHeight !== undefined
-      ? Math.round(
-          (checkedDimension(requestedHeight, 'output.height') * frameWidth) /
-            frameHeight,
-        )
-      : Math.round(frameWidth * density);
-  const height = requestedHeight !== undefined
-    ? checkedDimension(requestedHeight, 'output.height')
-    : requestedWidth !== undefined
-      ? Math.round(
-          (checkedDimension(requestedWidth, 'output.width') * frameHeight) /
-            frameWidth,
-        )
-      : Math.round(frameHeight * density);
+  const width =
+    requestedWidth !== undefined
+      ? checkedDimension(requestedWidth, 'output.width')
+      : requestedHeight !== undefined
+        ? Math.round(
+            (checkedDimension(requestedHeight, 'output.height') * frameWidth) /
+              frameHeight,
+          )
+        : Math.round(frameWidth * density);
+  const height =
+    requestedHeight !== undefined
+      ? checkedDimension(requestedHeight, 'output.height')
+      : requestedWidth !== undefined
+        ? Math.round(
+            (checkedDimension(requestedWidth, 'output.width') * frameHeight) /
+              frameWidth,
+          )
+        : Math.round(frameHeight * density);
 
   return {
     width: checkedDimension(width, 'resolved output width'),
@@ -460,16 +464,32 @@ function resolveTarget(
 ) {
   const target = scene.targets[targetId];
   if (!target) {
-    throw new TypeError(
+    throw new GuideShotError(
+      'TARGET_NOT_FOUND',
       `Annotation "${annotationId}" references missing target "${targetId}".`,
+      targetErrorOptions(scene, annotationId, targetId),
     );
   }
   if (!target.visible) {
-    throw new TypeError(
+    throw new GuideShotError(
+      'TARGET_NOT_VISIBLE',
       `Annotation "${annotationId}" references hidden target "${targetId}".`,
+      targetErrorOptions(scene, annotationId, targetId),
     );
   }
   return target;
+}
+
+function targetErrorOptions(
+  scene: CapturedScene,
+  annotationId: string,
+  target: string,
+) {
+  return {
+    recipeId: scene.recipeId,
+    jobKey: `${scene.recipeId}::${scene.variantKey}`,
+    details: { annotationId, target },
+  } as const;
 }
 
 function resolveArrowSide(

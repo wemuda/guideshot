@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 
+import { GuideShotError } from '@guideshot/core';
 import { describe, expect, it } from 'vitest';
 
 import type { CapturedScene } from '../src/contracts.js';
@@ -164,6 +165,43 @@ describe('composition document', () => {
     expect(html).toContain('class="box label"');
     expect(html.match(/marker-end=/g)).toHaveLength(2);
   });
+
+  it.each([
+    {
+      name: 'missing',
+      code: 'TARGET_NOT_FOUND',
+      targets: {},
+    },
+    {
+      name: 'hidden',
+      code: 'TARGET_NOT_VISIBLE',
+      targets: {
+        button: { ...scene.targets.button!, visible: false },
+      },
+    },
+  ] as const)(
+    'reports a $name annotation target with a stable diagnostic',
+    ({ code, targets }) => {
+      let error: unknown;
+      try {
+        layoutAnnotations({
+          scene: { ...scene, targets },
+          annotations: [callout],
+          measurements: new Map([['callout', { width: 140, height: 44 }]]),
+        });
+      } catch (cause) {
+        error = cause;
+      }
+
+      expect(error).toBeInstanceOf(GuideShotError);
+      expect(error).toMatchObject({
+        code,
+        recipeId: scene.recipeId,
+        jobKey: `${scene.recipeId}::${scene.variantKey}`,
+        details: { annotationId: callout.id, target: callout.target },
+      });
+    },
+  );
 
   it('resolves requested sizes and canonicalizes formats', () => {
     expect(resolveOutputSize(scene, { formats: ['png'] })).toEqual({
