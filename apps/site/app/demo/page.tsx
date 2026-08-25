@@ -9,7 +9,9 @@ export default function DemoIndexPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace(hasDemoSession(localStorage) ? '/demo/recipes' : '/demo/sign-in');
+    router.replace(
+      hasDemoSession(localStorage) ? '/demo/recipes' : '/demo/sign-in',
+    );
   }, [router]);
 
   return (

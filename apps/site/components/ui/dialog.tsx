@@ -51,13 +51,18 @@ function DialogContent({
 }
 
 function DialogHeader({ className, ...props }: ComponentProps<'div'>) {
-  return <div className={cn('flex flex-col gap-2 pr-8', className)} {...props} />;
+  return (
+    <div className={cn('flex flex-col gap-2 pr-8', className)} {...props} />
+  );
 }
 
 function DialogFooter({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
-      className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
+      className={cn(
+        'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
+        className,
+      )}
       {...props}
     />
   );

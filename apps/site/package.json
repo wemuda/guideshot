@@ -10,7 +10,12 @@
     "build": "vinext build",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "shots:validate": "guideshot validate",
+    "shots:plan": "guideshot plan",
+    "shots:capture": "guideshot capture",
+    "shots:compose": "guideshot compose",
+    "shots:verify": "guideshot verify"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.2.6",
@@ -31,6 +36,10 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
+    "@guideshot/cli": "workspace:*",
+    "@guideshot/core": "workspace:*",
+    "@guideshot/playwright": "workspace:*",
+    "@guideshot/renderer": "workspace:*",
     "@openai/sites-vite-plugin": "^0.1.0 || ^0.2.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",

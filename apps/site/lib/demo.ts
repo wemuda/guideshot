@@ -76,7 +76,9 @@ export function isDemoTheme(value: string | null): value is DemoTheme {
 
 export function hasDemoSession(storage: Storage): boolean {
   try {
-    const value: unknown = JSON.parse(storage.getItem(DEMO_SESSION_KEY) ?? 'null');
+    const value: unknown = JSON.parse(
+      storage.getItem(DEMO_SESSION_KEY) ?? 'null',
+    );
     return (
       typeof value === 'object' &&
       value !== null &&

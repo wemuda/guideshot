@@ -7,4 +7,6 @@ coverage/
 !.env.example
 .guideshot/cache/
 .guideshot/runs/
+**/.guideshot/cache/
+**/.guideshot/runs/
 *.log

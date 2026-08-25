@@ -5,7 +5,10 @@ import type { ComponentProps } from 'react';
 
 import { cn } from '@/lib/utils';
 
-function Avatar({ className, ...props }: ComponentProps<typeof AvatarPrimitive.Root>) {
+function Avatar({
+  className,
+  ...props
+}: ComponentProps<typeof AvatarPrimitive.Root>) {
   return (
     <AvatarPrimitive.Root
       className={cn(

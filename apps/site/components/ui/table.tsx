@@ -5,7 +5,10 @@ import { cn } from '@/lib/utils';
 function Table({ className, ...props }: ComponentProps<'table'>) {
   return (
     <div className="relative w-full overflow-auto">
-      <table className={cn('w-full caption-bottom text-sm', className)} {...props} />
+      <table
+        className={cn('w-full caption-bottom text-sm', className)}
+        {...props}
+      />
     </div>
   );
 }
@@ -15,7 +18,9 @@ function TableHeader({ className, ...props }: ComponentProps<'thead'>) {
 }
 
 function TableBody({ className, ...props }: ComponentProps<'tbody'>) {
-  return <tbody className={cn('[&_tr:last-child]:border-0', className)} {...props} />;
+  return (
+    <tbody className={cn('[&_tr:last-child]:border-0', className)} {...props} />
+  );
 }
 
 function TableRow({ className, ...props }: ComponentProps<'tr'>) {

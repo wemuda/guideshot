@@ -84,11 +84,16 @@ export default function RecipesPage() {
   }
 
   if (!ready || !authenticated) {
-    return <main className="min-h-screen bg-background" aria-label="Loading demo" />;
+    return (
+      <main className="min-h-screen bg-background" aria-label="Loading demo" />
+    );
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground" data-guide-target="app.ready">
+    <main
+      className="min-h-screen bg-background text-foreground"
+      data-guide-target="app.ready"
+    >
       <span className="hidden" data-guide-target="app.loading">
         Loading
       </span>
@@ -99,7 +104,9 @@ export default function RecipesPage() {
               G
             </span>
             <div>
-              <p className="text-sm font-bold tracking-[-0.03em]">GuideShot Studio</p>
+              <p className="text-sm font-bold tracking-[-0.03em]">
+                GuideShot Studio
+              </p>
               <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
                 Pilot
               </p>
@@ -150,7 +157,9 @@ export default function RecipesPage() {
               <select
                 className="h-9 rounded-full border border-border bg-background px-3 text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 id="demo-locale"
-                onChange={(event) => setLocale(event.target.value as DemoLocale)}
+                onChange={(event) =>
+                  setLocale(event.target.value as DemoLocale)
+                }
                 value={locale}
               >
                 <option value="en">EN</option>
@@ -178,12 +187,22 @@ export default function RecipesPage() {
                 </Avatar>
                 <div className="hidden lg:block">
                   <p className="text-xs font-semibold">Mara Chen</p>
-                  <p className="text-[10px] text-muted-foreground">Administrator</p>
-                  <span className="sr-only" data-guide-target="privacy.user-email">
+                  <p className="text-[10px] text-muted-foreground">
+                    Administrator
+                  </p>
+                  <span
+                    className="sr-only"
+                    data-guide-target="privacy.user-email"
+                  >
                     mara.chen@example.invalid
                   </span>
                 </div>
-                <Button aria-label="Sign out" onClick={signOut} size="icon" variant="ghost">
+                <Button
+                  aria-label="Sign out"
+                  onClick={signOut}
+                  size="icon"
+                  variant="ghost"
+                >
                   <LogOut className="size-4" />
                 </Button>
               </div>
@@ -214,7 +233,9 @@ export default function RecipesPage() {
                 <DialogContent data-guide-target="recipe.form">
                   <DialogHeader>
                     <DialogTitle>{copy.createTitle}</DialogTitle>
-                    <DialogDescription>{copy.createDescription}</DialogDescription>
+                    <DialogDescription>
+                      {copy.createDescription}
+                    </DialogDescription>
                   </DialogHeader>
                   <form className="space-y-5" onSubmit={createRecipe}>
                     <div className="space-y-2">
@@ -234,7 +255,9 @@ export default function RecipesPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="recipe-scenario">{copy.scenarioLabel}</Label>
+                      <Label htmlFor="recipe-scenario">
+                        {copy.scenarioLabel}
+                      </Label>
                       <select
                         className="flex h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/15"
                         data-guide-target="recipe.scenario"
@@ -278,7 +301,9 @@ export default function RecipesPage() {
                   <TableRow className="bg-muted/35 hover:bg-muted/35">
                     <TableHead>{copy.name}</TableHead>
                     <TableHead>{copy.scenario}</TableHead>
-                    <TableHead className="text-center">{copy.variants}</TableHead>
+                    <TableHead className="text-center">
+                      {copy.variants}
+                    </TableHead>
                     <TableHead className="text-right">{copy.status}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -291,9 +316,13 @@ export default function RecipesPage() {
                           {scenario}
                         </code>
                       </TableCell>
-                      <TableCell className="text-center font-medium">{variants}</TableCell>
+                      <TableCell className="text-center font-medium">
+                        {variants}
+                      </TableCell>
                       <TableCell className="text-right">
-                        <Badge variant={status === 'ready' ? 'success' : 'outline'}>
+                        <Badge
+                          variant={status === 'ready' ? 'success' : 'outline'}
+                        >
                           {status === 'ready' ? copy.ready : copy.draft}
                         </Badge>
                       </TableCell>

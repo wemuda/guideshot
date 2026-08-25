@@ -1,6 +1,11 @@
 'use client';
 
-import { CheckCircle2, LockKeyhole, ScanSearch, ShieldCheck } from 'lucide-react';
+import {
+  CheckCircle2,
+  LockKeyhole,
+  ScanSearch,
+  ShieldCheck,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
@@ -42,7 +47,9 @@ export default function DemoSignInPage() {
   }
 
   if (!ready) {
-    return <main className="min-h-screen bg-background" aria-label="Loading demo" />;
+    return (
+      <main className="min-h-screen bg-background" aria-label="Loading demo" />
+    );
   }
 
   return (
@@ -60,12 +67,15 @@ export default function DemoSignInPage() {
             A real app state, made safe to reproduce.
           </h1>
           <p className="mt-5 max-w-md leading-7 text-muted-foreground">
-            This small workspace proves that authentication and application state
-            can stay in a typed adapter—never in the recipe.
+            This small workspace proves that authentication and application
+            state can stay in a typed adapter—never in the recipe.
           </p>
           <div className="mt-9 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
             {promises.map(([Icon, text]) => (
-              <div className="flex items-center gap-3 text-sm font-medium" key={text}>
+              <div
+                className="flex items-center gap-3 text-sm font-medium"
+                key={text}
+              >
                 <span className="grid size-9 place-items-center rounded-xl border border-border bg-card">
                   <Icon className="size-4 text-primary" />
                 </span>
@@ -90,8 +100,8 @@ export default function DemoSignInPage() {
               Sign in to the demo workspace
             </h2>
             <p className="text-sm leading-6 text-muted-foreground">
-              Use the deterministic account to explore a capture-ready authenticated
-              state.
+              Use the deterministic account to explore a capture-ready
+              authenticated state.
             </p>
           </CardHeader>
           <CardContent>
@@ -123,11 +133,7 @@ export default function DemoSignInPage() {
                 )}
               </div>
               <div className="grid gap-2">
-                <Button
-                  data-guide-target="auth.submit"
-                  size="lg"
-                  type="submit"
-                >
+                <Button data-guide-target="auth.submit" size="lg" type="submit">
                   Continue
                 </Button>
                 <Button

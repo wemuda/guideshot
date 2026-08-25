@@ -8,8 +8,10 @@ const samples = {
   "scenario": { "use": "pilot:authenticated" },
   "page": { "path": "/demo/recipes" },
   "matrix": {
-    "locale": ["en", "da", "nb"],
-    "theme": ["light", "dark"]
+    "dimensions": {
+      "locale": ["en", "da", "nb"],
+      "theme": ["light", "dark"]
+    }
   },
   "prepare": [
     { "do": "click", "target": "recipes.create" }

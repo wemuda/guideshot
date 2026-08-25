@@ -1,0 +1,79 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "pilot.sign-in.email",
+  "title": "Sign in with the deterministic account",
+  "tags": ["pilot", "authentication"],
+  "profile": "guide.desktop",
+  "page": {
+    "path": "/demo/sign-in"
+  },
+  "matrix": {
+    "dimensions": {
+      "locale": ["en", "da"],
+      "theme": ["light", "dark"]
+    }
+  },
+  "prepare": [
+    {
+      "do": "fill",
+      "target": "auth.email",
+      "value": "demo@guideshot.dev"
+    }
+  ],
+  "ready": [
+    {
+      "expect": "visible",
+      "target": "auth.card"
+    },
+    {
+      "expect": "enabled",
+      "target": "auth.submit"
+    }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["auth.card"],
+      "padding": 72,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "pixelRatio": 1,
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "work-email",
+      "kind": "callout",
+      "target": "auth.email",
+      "content": {
+        "en": "Enter the deterministic demo account.",
+        "da": "Indtast den deterministiske demokonto."
+      },
+      "placement": {
+        "side": "auto",
+        "offset": 20
+      },
+      "connector": {
+        "kind": "arrow",
+        "anchor": "edge"
+      },
+      "emphasis": {
+        "kind": "outline",
+        "padding": 5
+      }
+    }
+  ],
+  "accessibility": {
+    "alt": {
+      "en": "The GuideShot Studio sign-in form with the work email field highlighted.",
+      "da": "GuideShot Studio-loginformularen med arbejdsmailfeltet fremhævet."
+    }
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1200,
+    "height": 900,
+    "quality": 92
+  }
+}

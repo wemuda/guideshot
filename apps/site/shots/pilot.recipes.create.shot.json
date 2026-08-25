@@ -1,0 +1,93 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "pilot.recipes.create",
+  "title": "Create a recipe from an authenticated state",
+  "tags": ["pilot", "recipes", "authenticated"],
+  "profile": "guide.desktop",
+  "scenario": {
+    "use": "pilot:authenticated"
+  },
+  "page": {
+    "path": "/demo/recipes"
+  },
+  "matrix": {
+    "dimensions": {
+      "locale": ["en", "da"],
+      "theme": ["light", "dark"]
+    }
+  },
+  "prepare": [
+    {
+      "do": "click",
+      "target": "recipes.create"
+    },
+    {
+      "do": "fill",
+      "target": "recipe.name",
+      "value": {
+        "en": "Invite a teammate",
+        "da": "Inviter en kollega"
+      }
+    }
+  ],
+  "ready": [
+    {
+      "expect": "visible",
+      "target": "recipe.form"
+    },
+    {
+      "expect": "hidden",
+      "target": "app.loading"
+    },
+    {
+      "expect": "editable",
+      "target": "recipe.name"
+    }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["recipe.form"],
+      "padding": 72,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "pixelRatio": 1,
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "recipe-name",
+      "kind": "callout",
+      "target": "recipe.name",
+      "content": {
+        "en": "Give the recipe a stable name.",
+        "da": "Giv opskriften et stabilt navn."
+      },
+      "placement": {
+        "side": "auto",
+        "offset": 20
+      },
+      "connector": {
+        "kind": "arrow",
+        "anchor": "edge"
+      },
+      "emphasis": {
+        "kind": "spotlight",
+        "padding": 6
+      }
+    }
+  ],
+  "accessibility": {
+    "alt": {
+      "en": "The new recipe dialog with the recipe name field highlighted.",
+      "da": "Dialogen til en ny opskrift med opskriftens navnefelt fremhævet."
+    }
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1200,
+    "height": 900,
+    "quality": 92
+  }
+}

@@ -6,4 +6,9 @@ coverage
 .wrangler
 .guideshot/cache
 .guideshot/runs
+**/.guideshot/cache
+**/.guideshot/runs
+apps/site/public/generated/guideshot
+**/next-env.d.ts
 pnpm-lock.yaml
+SPEC.md

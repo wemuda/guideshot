@@ -8,7 +8,10 @@ export function SiteHeader() {
   return (
     <header className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
       <Brand />
-      <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
+      <nav
+        className="hidden items-center gap-1 md:flex"
+        aria-label="Main navigation"
+      >
         <Button asChild size="sm" variant="ghost">
           <Link href="/#how-it-works">How it works</Link>
         </Button>

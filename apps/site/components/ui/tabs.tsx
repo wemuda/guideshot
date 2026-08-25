@@ -5,14 +5,23 @@ import type { ComponentProps } from 'react';
 
 import { cn } from '@/lib/utils';
 
-function Tabs({ className, ...props }: ComponentProps<typeof TabsPrimitive.Root>) {
+function Tabs({
+  className,
+  ...props
+}: ComponentProps<typeof TabsPrimitive.Root>) {
   return <TabsPrimitive.Root className={cn('w-full', className)} {...props} />;
 }
 
-function TabsList({ className, ...props }: ComponentProps<typeof TabsPrimitive.List>) {
+function TabsList({
+  className,
+  ...props
+}: ComponentProps<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
-      className={cn('inline-flex h-10 items-center rounded-lg bg-muted p-1', className)}
+      className={cn(
+        'inline-flex h-10 items-center rounded-lg bg-muted p-1',
+        className,
+      )}
       {...props}
     />
   );
@@ -39,7 +48,10 @@ function TabsContent({
 }: ComponentProps<typeof TabsPrimitive.Content>) {
   return (
     <TabsPrimitive.Content
-      className={cn('mt-4 outline-none focus-visible:ring-2 focus-visible:ring-primary', className)}
+      className={cn(
+        'mt-4 outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        className,
+      )}
       {...props}
     />
   );

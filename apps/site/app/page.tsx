@@ -13,6 +13,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { CodeSample } from '@/components/code-sample';
+import { GeneratedShowcase } from '@/components/generated-showcase';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { Badge } from '@/components/ui/badge';
@@ -57,7 +58,10 @@ const principles = [
 function ProductFrame() {
   return (
     <div className="relative mx-auto w-full max-w-[650px] pt-7 lg:mx-0">
-      <Badge className="absolute right-2 top-0 z-20 shadow-lg shadow-primary/20" variant="primary">
+      <Badge
+        className="absolute right-2 top-0 z-20 shadow-lg shadow-primary/20"
+        variant="primary"
+      >
         deterministic output
       </Badge>
       <div className="overflow-hidden rounded-[22px] border border-foreground/15 bg-card shadow-[0_36px_90px_-46px_rgba(16,20,31,0.55)]">
@@ -133,7 +137,9 @@ function ProductFrame() {
               </span>
             </div>
             <div className="absolute bottom-5 right-5 max-w-[180px] rounded-xl bg-primary p-3 text-[10px] font-medium leading-relaxed text-white shadow-xl shadow-primary/20 sm:max-w-[210px] sm:text-[11px]">
-              <span className="mb-1 block font-bold">The recipe stays stable.</span>
+              <span className="mb-1 block font-bold">
+                The recipe stays stable.
+              </span>
               Targets follow the interface, even when its layout changes.
             </div>
           </div>
@@ -165,7 +171,8 @@ export default function Home() {
           </h1>
           <p className="mt-7 max-w-lg text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
             Turn one declarative recipe into precise, annotated screenshots of
-            real product states—across every language, theme, role, and viewport.
+            real product states—across every language, theme, role, and
+            viewport.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg">
@@ -250,7 +257,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-card/45 py-24 sm:py-32">
+      <GeneratedShowcase />
+
+      <section className="py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <div className="mb-12 max-w-2xl">
             <Badge variant="outline">Designed for change</Badge>
@@ -316,11 +325,14 @@ export default function Home() {
               Make screenshots part of the product.
             </h2>
             <p className="mt-5 max-w-xl leading-7 text-background/65">
-              Explore the same deterministic pilot application that GuideShot uses
-              to prove its capture pipeline.
+              Explore the same deterministic pilot application that GuideShot
+              uses to prove its capture pipeline.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild className="bg-background text-foreground hover:bg-background/85">
+              <Button
+                asChild
+                className="bg-background text-foreground hover:bg-background/85"
+              >
                 <Link href="/docs">Read the docs</Link>
               </Button>
               <Button
