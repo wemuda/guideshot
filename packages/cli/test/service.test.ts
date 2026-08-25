@@ -1,7 +1,14 @@
-import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { createJobCompositionHash, planProject } from '@guideshot/core';
+import {
+  createJobCompositionHash,
+  planProject,
+  PublicManifestSchema,
+  RecipeSchema,
+  SCHEMA_VERSION,
+} from '@guideshot/core';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { createGuideShotService } from '../src/service.js';
@@ -16,6 +23,46 @@ afterEach(async () => {
 });
 
 describe('GuideShotService', () => {
+  it('atomically writes the current portable schemas at stable paths', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'guideshot-cli-schema-'));
+    roots.push(root);
+    const report = await createGuideShotService({ cwd: root }).schema();
+    const schemaDir = path.join(root, '.guideshot');
+    const recipe = JSON.parse(
+      await readFile(path.join(schemaDir, 'recipe.schema.json'), 'utf8'),
+    ) as Record<string, unknown>;
+    const manifest = JSON.parse(
+      await readFile(path.join(schemaDir, 'manifest.schema.json'), 'utf8'),
+    ) as Record<string, unknown>;
+
+    expect(report).toMatchObject({
+      version: 1,
+      command: 'schema',
+      ok: true,
+      summary: { recipes: 0, jobs: 0 },
+      jobs: [],
+      diagnostics: [],
+      outputs: [
+        '.guideshot/recipe.schema.json',
+        '.guideshot/manifest.schema.json',
+      ],
+    });
+    expect((await readdir(schemaDir)).sort()).toEqual([
+      'manifest.schema.json',
+      'recipe.schema.json',
+    ]);
+    expect(recipe).toEqual(JSON.parse(JSON.stringify(RecipeSchema)));
+    expect(manifest).toEqual(JSON.parse(JSON.stringify(PublicManifestSchema)));
+    expect(recipe).toMatchObject({
+      $schema: 'https://json-schema.org/draft/2020-12/schema',
+      properties: { version: { const: SCHEMA_VERSION } },
+    });
+    expect(manifest).toMatchObject({
+      $schema: 'https://json-schema.org/draft/2020-12/schema',
+      properties: { version: { const: SCHEMA_VERSION } },
+    });
+  });
+
   it('plans without server, scenario, dimensions, driver, or renderer side effects', async () => {
     const fixture = await createFixture();
     roots.push(fixture.root);

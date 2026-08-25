@@ -142,11 +142,11 @@ export class GuideShotService {
   async #schema(options: CommandOptions): Promise<CommandReport> {
     const projectRoot = this.#schemaRoot(options.configFile);
     const schemaDir = path.join(projectRoot, '.guideshot');
-    const projectSchema = path.join(schemaDir, 'project.schema.json');
+    const recipeSchema = path.join(schemaDir, 'recipe.schema.json');
     const manifestSchema = path.join(schemaDir, 'manifest.schema.json');
     await mkdir(schemaDir, { recursive: true });
     await Promise.all([
-      writeAtomic(projectSchema, `${JSON.stringify(RecipeSchema, null, 2)}\n`),
+      writeAtomic(recipeSchema, `${JSON.stringify(RecipeSchema, null, 2)}\n`),
       writeAtomic(
         manifestSchema,
         `${JSON.stringify(PublicManifestSchema, null, 2)}\n`,
@@ -160,7 +160,7 @@ export class GuideShotService {
       jobs: [],
       diagnostics: [],
       outputs: [
-        relativePath(projectRoot, projectSchema),
+        relativePath(projectRoot, recipeSchema),
         relativePath(projectRoot, manifestSchema),
       ],
     };
