@@ -13,6 +13,7 @@ import type {
 import { discoverRecipes, assertUniqueRecipeIds } from './discovery.js';
 import { GuideShotError } from './diagnostics.js';
 import { expandMatrix, matchesVariantFilter } from './matrix.js';
+import { assertAllowedOrigin, resolvePageUrl } from './safety.js';
 import {
   defaultProfileName,
   validateConfig,
@@ -41,10 +42,15 @@ export function planRecipes(
 ): Plan {
   validateConfig(config);
   assertUniqueRecipeIds(sources);
+  const serverUrl = assertAllowedOrigin(
+    config.server.url,
+    config.safety?.allowedOrigins ?? [],
+  );
 
   const jobs: PlannedJob[] = [];
   for (const source of sources) {
     validateRecipeSemantics(source, config);
+    resolvePageUrl(serverUrl, source.recipe.page.path);
     if (!recipeSelected(source, options)) {
       continue;
     }

@@ -32,52 +32,88 @@ export async function resolveJob(
   config: GuideShotConfig,
   options: ResolveJobOptions,
 ): Promise<ResolvedJob> {
-  const dimensionState = await resolveDimensions(
-    planned,
-    config,
-    options.signal,
-  );
   const scenario = await prepareScenario(planned, config, options);
-  const safeVariables = scenario?.variables ?? {};
-  const browser = mergeBrowserState(
-    profileBrowserState(planned),
-    dimensionState,
-    scenario?.browser ?? {},
-  );
-  const interpolatedRecipe = validateRecipe(
-    interpolate(planned.recipe, {
-      scenario: safeVariables,
-      variant: planned.variants,
-    }),
-    planned.recipeFile,
-  );
-  const recipe = validateRecipe(
-    await resolveRecipeText(interpolatedRecipe, config.translations, {
-      locale: browser.locale ?? 'en',
-      variables: safeVariables,
-      variants: planned.variants,
-    }),
-    planned.recipeFile,
-  );
-  resolvePageUrl(options.baseUrl, recipe.page.path);
-  const result: ResolvedJob = {
-    recipe,
-    capture: {
-      key: planned.key,
-      recipeId: planned.recipeId,
-      variantKey: planned.variantKey,
-      variants: planned.variants,
-      profile: planned.captureIntent.profileConfig,
-      page: recipe.page,
-      prepare: recipe.prepare ?? [],
-      ready: recipe.ready ?? [],
-      capture: recipe.capture ?? {},
-      browser,
-      safeVariables,
-    },
-    ...(scenario?.cleanup === undefined ? {} : { cleanup: scenario.cleanup }),
-  };
-  return result;
+  try {
+    const dimensionState = await resolveDimensions(
+      planned,
+      config,
+      options.signal,
+    );
+    const safeVariables = scenario?.variables ?? {};
+    const browser = mergeBrowserState(
+      profileBrowserState(planned),
+      dimensionState,
+      scenario?.browser ?? {},
+    );
+    const interpolatedRecipe = validateRecipe(
+      interpolate(planned.recipe, {
+        scenario: safeVariables,
+        variant: planned.variants,
+      }),
+      planned.recipeFile,
+    );
+    const recipe = validateRecipe(
+      await resolveRecipeText(interpolatedRecipe, config.translations, {
+        locale: browser.locale ?? 'en',
+        variables: safeVariables,
+        variants: planned.variants,
+      }),
+      planned.recipeFile,
+    );
+    resolvePageUrl(options.baseUrl, recipe.page.path);
+    return {
+      recipe,
+      capture: {
+        key: planned.key,
+        recipeId: planned.recipeId,
+        variantKey: planned.variantKey,
+        variants: planned.variants,
+        profile: planned.captureIntent.profileConfig,
+        page: recipe.page,
+        prepare: recipe.prepare ?? [],
+        ready: recipe.ready ?? [],
+        capture: recipe.capture ?? {},
+        browser,
+        safeVariables,
+      },
+      ...(scenario?.cleanup === undefined ? {} : { cleanup: scenario.cleanup }),
+    };
+  } catch (failure) {
+    return cleanupAfterResolutionFailure(scenario?.cleanup, planned, failure);
+  }
+}
+
+async function cleanupAfterResolutionFailure(
+  cleanup: (() => void | Promise<void>) | undefined,
+  planned: PlannedJob,
+  failure: unknown,
+): Promise<never> {
+  if (cleanup === undefined) throw failure;
+  try {
+    await cleanup();
+  } catch (cleanupFailure) {
+    throw new GuideShotError(
+      'SCENARIO_FAILED',
+      `Scenario cleanup failed after job resolution failed for "${planned.key}".`,
+      {
+        recipeId: planned.recipeId,
+        jobKey: planned.key,
+        details: {
+          resolutionError: errorMessage(failure),
+          cleanupError: errorMessage(cleanupFailure),
+        },
+        cause: new AggregateError(
+          [failure, cleanupFailure],
+          `Resolution and scenario cleanup both failed for "${planned.key}".`,
+        ),
+      },
+    );
+  }
+  throw failure;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 export function mergeBrowserState(
