@@ -184,9 +184,10 @@ export default function DocsPage() {
                 </li>
               ))}
             </ol>
-            <CodeBlock>{`pnpm add -D @guideshot/cli @guideshot/playwright @guideshot/renderer
+            <CodeBlock>{`pnpm add -D @guideshot/cli @guideshot/playwright @guideshot/renderer playwright
 pnpm exec playwright install chromium
 pnpm exec guideshot validate
+pnpm exec guideshot schema
 pnpm exec guideshot plan
 pnpm exec guideshot capture`}</CodeBlock>
             <CodeBlock>{config}</CodeBlock>
@@ -308,6 +309,10 @@ pnpm exec guideshot capture`}</CodeBlock>
                   [
                     'validate',
                     'Validate config, recipes, references, and outputs.',
+                  ],
+                  [
+                    'schema',
+                    'Write portable recipe and manifest JSON schemas.',
                   ],
                   ['plan', 'Print the job matrix and cache identities.'],
                   [

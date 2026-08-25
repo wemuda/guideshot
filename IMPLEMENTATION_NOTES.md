@@ -1,13 +1,13 @@
 # GuideShot implementation notes
 
-Status: kickoff decisions in progress
+Status: Phase 1 vertical slice implemented
 
 This file records implementation-level takeaways that complement `SPEC.md`. It
 should capture decisions, not duplicate the full product specification.
 
 ## Settled baseline from the specification
 
-- GuideShot is a TypeScript package family targeting Node.js 20 or newer.
+- GuideShot is a TypeScript package family targeting Node.js 20.5 or newer.
 - The authoritative interfaces are a CLI and Node.js library; Vite integration
   is a thin consumer and never performs implicit capture during a normal build.
 - Recipes are strict, portable, non-executable data. JSON is canonical and JSONC
@@ -41,24 +41,45 @@ should capture decisions, not duplicate the full product specification.
 - Retain the specification's `@guideshot/*` package-family naming unless package
   registry availability or publication setup requires a later change.
 
-## Remaining kickoff decisions
+## Implemented decisions
 
-1. Delivery scope: implement Phase 1 as a working vertical slice, or first turn
-   the draft into a more detailed normative specification and execution plan.
-2. Package topology: create the Phase 1 packages plus the React site now, or
-   also create empty workspace boundaries for later Vite and React packages.
-3. Phase 1 annotation fidelity: accept a deterministic functional renderer
-   first, or require production-quality visual design and bundled brand assets
-   in the initial milestone.
+- The workspace contains `schema`, `core`, `playwright`, `renderer`, and `cli`
+  packages plus the React pilot site. Empty future-package shells were not
+  created.
+- Phase 1 recipes publish one canonical PNG or WebP asset per variant. Multiple
+  source formats remain a later manifest-contract decision.
+- Targets whose identity starts with `privacy.` are masked in Chromium before
+  screenshot bytes leave the driver. The cache independently rejects scenes
+  that are not explicitly sanitized or whose pixels do not match their hash.
+- Custom `invoke` actions are deferred until there is a real typed registration
+  and execution contract; the Phase 1 schema rejects them.
+- The pilot owns two recipes: a simple sign-in state and an authenticated recipe
+  dialog prepared entirely by a scenario. English and Danish across light and
+  dark themes produce eight committed 1200 by 900 WebP assets.
+- The site imports the committed public manifest at build time. Its ordinary
+  production build does not start an application server, prepare a scenario, or
+  open a browser.
+- Generated assets are immutable and content-addressed. Publication stages all
+  selected outputs and renames the public manifest last.
 
-## Defaults for remaining decisions
+## Verified boundaries
 
-- Implement Phase 1 as a working vertical slice.
-- Scaffold the Phase 1 packages (`schema`, `core`, `playwright`, `renderer`, and
-  `cli`) plus the React site; defer empty `vite` and `react` package shells.
-- Use the React site for one unauthenticated and one deterministic
-  fixture-authenticated recipe as end-to-end acceptance fixtures.
-- Make renderer output polished enough for the public demo while prioritizing a
-  deterministic, well-tested composition contract over a final brand system.
-- Treat Phase 1 as a publishable-quality API foundation but do not publish a
-  release until the vertical slice and compatibility fixtures pass.
+- Validation and planning have no browser, server, scenario, dimension, or
+  renderer side effects.
+- Capture uses one browser run with a fresh context for every job.
+- Composition succeeds from sanitized cache data while the application server
+  is unavailable.
+- Missing, duplicate, hidden, and unstable targets have stable diagnostics.
+- The public manifest contains only public recipe, variant, asset, hash,
+  dimension, format, and accessibility data.
+- The same driver contracts are exercised against the Vite pilot and a
+  controlled Node HTTP fixture.
+
+## Deliberate deferrals
+
+- Vite virtual modules and HMR, React consumers, inspectors, galleries,
+  source-set fingerprints, custom actions, advanced privacy policies, traces,
+  concurrency controls, migration tooling, and additional browser drivers stay
+  in later phases.
+- No package release or site deployment is part of this implementation. Those
+  remain explicit follow-up operations.
