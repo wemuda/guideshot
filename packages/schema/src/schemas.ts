@@ -529,7 +529,11 @@ export type OutputFormat = Static<typeof OutputFormatSchema>;
 export const OutputSchema = Type.Object(
   {
     formats: Type.Optional(
-      Type.Array(OutputFormatSchema, { minItems: 1, uniqueItems: true }),
+      Type.Array(OutputFormatSchema, {
+        minItems: 1,
+        maxItems: 1,
+        uniqueItems: true,
+      }),
     ),
     width: Type.Optional(Type.Integer({ minimum: 1 })),
     height: Type.Optional(Type.Integer({ minimum: 1 })),

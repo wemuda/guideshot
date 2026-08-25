@@ -145,7 +145,7 @@ export const fullRecipe = {
     },
   },
   output: {
-    formats: ['webp', 'png'],
+    formats: ['webp'],
     width: 1280,
     height: 960,
     quality: 92,

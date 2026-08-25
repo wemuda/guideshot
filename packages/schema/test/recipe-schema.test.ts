@@ -166,4 +166,13 @@ describe('RecipeSchema', () => {
     ).toBe(false);
     expect(isRecipe({ ...minimalRecipe, accessibility: {} })).toBe(false);
   });
+
+  it('publishes one canonical format per recipe variant', () => {
+    expect(
+      isRecipe({
+        ...minimalRecipe,
+        output: { formats: ['png', 'webp'] },
+      }),
+    ).toBe(false);
+  });
 });
