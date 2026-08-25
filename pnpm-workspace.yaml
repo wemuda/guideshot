@@ -1,0 +1,9 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+catalog:
+  '@types/node': ^22.19.19
+  tsup: ^8.5.0
+  typescript: ^5.9.3
+  vitest: ^4.0.14

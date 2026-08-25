@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+.next
+.vinext
+.wrangler
+.guideshot/cache
+.guideshot/runs
+pnpm-lock.yaml
