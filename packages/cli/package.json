@@ -1,0 +1,40 @@
+{
+  "name": "@guideshot/cli",
+  "version": "0.1.0",
+  "description": "Command-line and programmatic orchestration for GuideShot.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "guideshot": "./dist/bin.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts src/bin.ts --format esm --dts --sourcemap --clean",
+    "test": "vitest run --root ../.. packages/cli/test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@guideshot/core": "workspace:*",
+    "execa": "^9.6.1",
+    "image-size": "^2.0.2",
+    "jiti": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
