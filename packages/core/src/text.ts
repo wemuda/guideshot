@@ -104,7 +104,10 @@ export async function resolveRecipeText(
 export function resolvedAnnotations(recipe: Recipe): ResolvedAnnotation[] {
   return (recipe.annotations ?? []).map((definition) => ({
     definition,
-    ...(definition.kind === 'callout' && typeof definition.content === 'string'
+    ...((definition.kind === 'callout' ||
+      definition.kind === 'label' ||
+      definition.kind === 'marker') &&
+    typeof definition.content === 'string'
       ? { text: definition.content }
       : {}),
   }));
@@ -158,12 +161,20 @@ async function resolveAnnotationText(
   provider: TranslationProvider | undefined,
   context: ResolveTextContext,
 ): Promise<Annotation> {
-  if (annotation.kind !== 'callout') {
+  if (
+    annotation.kind !== 'callout' &&
+    annotation.kind !== 'label' &&
+    annotation.kind !== 'marker'
+  ) {
+    return annotation;
+  }
+  const content = annotation.content;
+  if (content === undefined) {
     return annotation;
   }
   return {
     ...annotation,
-    content: await resolveLocalizedText(annotation.content, provider, context),
+    content: await resolveLocalizedText(content, provider, context),
   };
 }
 

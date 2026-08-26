@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.connector.standalone",
+  "title": "Standalone arrow",
+  "tags": ["showcase", "connector", "arrow"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=annotations" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "standalone-arrow",
+      "kind": "arrow",
+      "target": "showcase.badge",
+      "placement": { "side": "bottom", "offset": 12 }
+    }
+  ],
+  "accessibility": {
+    "alt": "A standalone arrow points to the Completion change badge."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

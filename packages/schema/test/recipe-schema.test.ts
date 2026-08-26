@@ -162,6 +162,38 @@ describe('RecipeSchema', () => {
     ).toBe(false);
   });
 
+  it('accepts every renderer-supported annotation kind', () => {
+    expect(
+      isRecipe({
+        ...minimalRecipe,
+        annotations: [
+          {
+            id: 'callout',
+            kind: 'callout',
+            target: 'demo.action',
+            content: 'Choose this action.',
+          },
+          { id: 'arrow', kind: 'arrow', target: 'demo.action' },
+          { id: 'spotlight', kind: 'spotlight', target: 'demo.action' },
+          { id: 'outline', kind: 'outline', target: 'demo.action' },
+          {
+            id: 'marker',
+            kind: 'marker',
+            target: 'demo.action',
+            content: { en: '1', da: '1' },
+          },
+          {
+            id: 'label',
+            kind: 'label',
+            target: 'demo.action',
+            content: 'Primary action',
+          },
+          { id: 'redaction', kind: 'redaction', target: 'demo.secret' },
+        ],
+      }),
+    ).toBe(true);
+  });
+
   it('requires exactly one accessibility mode', () => {
     expect(isRecipe({ ...minimalRecipe, accessibility: { alt: '' } })).toBe(
       false,

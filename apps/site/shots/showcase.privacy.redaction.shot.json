@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.privacy.redaction",
+  "title": "Composition redaction",
+  "tags": ["showcase", "privacy", "redaction"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=privacy" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "recovery-redaction",
+      "kind": "redaction",
+      "target": "showcase.secret",
+      "padding": 3
+    }
+  ],
+  "accessibility": {
+    "alt": "Account details with the email masked during capture and the recovery code redacted during composition."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

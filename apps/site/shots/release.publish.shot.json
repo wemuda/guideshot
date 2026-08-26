@@ -1,0 +1,78 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "release.publish",
+  "title": "Publish the release",
+  "tags": ["release", "connected-guide", "publish"],
+  "profile": "guide.desktop",
+  "page": {
+    "path": "/demo/releases?step=publish"
+  },
+  "matrix": {
+    "dimensions": {
+      "locale": ["en", "da", "nb"],
+      "theme": ["light", "dark"]
+    }
+  },
+  "ready": [
+    {
+      "expect": "visible",
+      "target": "app.ready"
+    },
+    {
+      "expect": "hidden",
+      "target": "app.loading"
+    },
+    {
+      "expect": "enabled",
+      "target": "release.publish"
+    }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["release.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "pixelRatio": 2,
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "publish-release",
+      "kind": "callout",
+      "target": "release.publish",
+      "content": {
+        "en": "Publish the release when the notes are ready.",
+        "da": "Udgiv versionen, når noterne er klar.",
+        "nb": "Publiser utgivelsen når notatene er klare."
+      },
+      "placement": {
+        "side": "auto",
+        "offset": 20
+      },
+      "connector": {
+        "kind": "arrow",
+        "anchor": "edge"
+      },
+      "emphasis": {
+        "kind": "outline",
+        "padding": 5
+      }
+    }
+  ],
+  "accessibility": {
+    "alt": {
+      "en": "Release v1.3.0 ready to publish with the Publish release action highlighted.",
+      "da": "Udgivelse v1.3.0 klar til udgivelse med handlingen Udgiv version fremhævet.",
+      "nb": "Utgivelse v1.3.0 klar til publisering med handlingen Publiser utgivelse fremhevet."
+    }
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

@@ -1,38 +1,77 @@
-import { Code2 } from 'lucide-react';
+'use client';
+
+import {
+  ExternalLinkIcon,
+  Moon02Icon,
+  Sun03Icon,
+} from '@hugeicons/core-free-icons';
+import { Button } from '@guideshot/ui/components/button';
+import { Icon } from '@guideshot/ui/components/icon';
+import { useTheme } from '@guideshot/ui/components/theme-provider';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@guideshot/ui/components/tooltip';
 import Link from 'next/link';
 
 import { Brand } from '@/components/brand';
-import { Button } from '@/components/ui/button';
+import { useHydrated } from '@/hooks/use-hydrated';
 
-export function SiteHeader() {
+export function SiteHeader({
+  showThemeToggle = true,
+}: {
+  showThemeToggle?: boolean;
+}) {
+  const { resolvedTheme, setTheme } = useTheme();
+  const hydrated = useHydrated();
+  const dark = hydrated && resolvedTheme === 'dark';
+
   return (
-    <header className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
-      <Brand />
-      <nav
-        className="hidden items-center gap-1 md:flex"
-        aria-label="Main navigation"
-      >
-        <Button asChild size="sm" variant="ghost">
-          <Link href="/#how-it-works">How it works</Link>
-        </Button>
-        <Button asChild size="sm" variant="ghost">
-          <Link href="/demo">Demo</Link>
-        </Button>
-        <Button asChild size="sm" variant="ghost">
-          <Link href="/docs">Docs</Link>
-        </Button>
-      </nav>
-      <Button asChild size="sm" variant="outline">
-        <a
-          href="https://github.com/wemuda/guideshot"
-          rel="noreferrer"
-          target="_blank"
+    <header className="border-b border-separator bg-background/95">
+      <div className="mx-auto flex h-20 w-full max-w-[1536px] items-center justify-between px-5 sm:px-8 lg:px-[54px]">
+        <Brand />
+        <nav
+          className="flex items-center gap-1 sm:gap-2"
+          aria-label="Main navigation"
         >
-          <Code2 className="size-4" />
-          <span className="hidden sm:inline">View source</span>
-          <span className="sm:hidden">Source</span>
-        </a>
-      </Button>
+          <Button asChild size="sm" variant="ghost">
+            <Link href="/docs">Docs</Link>
+          </Button>
+          <Button asChild size="sm" variant="ghost">
+            <Link href="/examples">Examples</Link>
+          </Button>
+          <Button asChild size="sm" variant="ghost">
+            <a
+              aria-label="GuideShot on GitHub"
+              href="https://github.com/wemuda/guideshot"
+              rel="noreferrer"
+              target="_blank"
+            >
+              <span className="hidden sm:inline">GitHub</span>
+              <Icon icon={ExternalLinkIcon} size={12} />
+            </a>
+          </Button>
+          {showThemeToggle ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  aria-label={dark ? 'Use light theme' : 'Use dark theme'}
+                  onClick={() => setTheme(dark ? 'light' : 'dark')}
+                  size="icon-sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  <Icon icon={dark ? Sun03Icon : Moon02Icon} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {dark ? 'Use light theme' : 'Use dark theme'}
+              </TooltipContent>
+            </Tooltip>
+          ) : null}
+        </nav>
+      </div>
     </header>
   );
 }

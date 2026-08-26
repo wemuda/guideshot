@@ -83,6 +83,23 @@ describe('resolveFrameRect', () => {
     ).toEqual({ x: 100, y: 175, width: 300, height: 150 });
   });
 
+  it.each([
+    ['16:9', 16 / 9],
+    ['4:3', 4 / 3],
+    ['9:16', 9 / 16],
+  ] as const)('resolves a %s target frame', (aspectRatio, ratio) => {
+    const frame = resolveFrameRect({
+      frame: { target: 'device', aspectRatio, fit: 'expand' },
+      document: { x: 0, y: 0, width: 2000, height: 2000 },
+      viewport: { x: 0, y: 0, width: 2000, height: 2000 },
+      targets: {
+        device: { x: 500, y: 500, width: 600, height: 600 },
+      },
+    });
+
+    expect(frame.width / frame.height).toBeCloseTo(ratio, 2);
+  });
+
   it('fails when a frame target was not measured', () => {
     expect(() =>
       resolveFrameRect({

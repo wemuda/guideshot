@@ -2,8 +2,6 @@ node_modules
 dist
 coverage
 .next
-.vinext
-.wrangler
 .guideshot/cache
 .guideshot/runs
 **/.guideshot/cache
@@ -12,3 +10,4 @@ apps/site/public/generated/guideshot
 **/next-env.d.ts
 pnpm-lock.yaml
 SPEC.md
+packages/ui

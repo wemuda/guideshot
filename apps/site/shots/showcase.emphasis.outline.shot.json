@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.emphasis.outline",
+  "title": "Callout with outline",
+  "tags": ["showcase", "emphasis", "outline"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=annotations" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "outline-emphasis",
+      "kind": "callout",
+      "target": "showcase.metric",
+      "content": "Active users grew this week.",
+      "placement": { "side": "bottom", "offset": 16 },
+      "connector": { "kind": "arrow", "anchor": "edge" },
+      "emphasis": { "kind": "outline", "padding": 8 }
+    }
+  ],
+  "accessibility": {
+    "alt": "A project metric outlined behind a connected callout."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

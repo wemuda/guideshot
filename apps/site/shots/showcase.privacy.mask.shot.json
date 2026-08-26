@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.privacy.mask",
+  "title": "Capture-time privacy mask",
+  "tags": ["showcase", "privacy", "capture"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=privacy" },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "visible", "target": "privacy.email" }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "accessibility": {
+    "alt": "Account details with the email address masked before the capture is cached."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "release.create",
+  "title": "Create the first release",
+  "tags": ["release", "connected-guide", "create"],
+  "profile": "guide.desktop",
+  "page": {
+    "path": "/demo/releases?step=create"
+  },
+  "matrix": {
+    "dimensions": {
+      "locale": ["en", "da", "nb"],
+      "theme": ["light", "dark"]
+    }
+  },
+  "ready": [
+    {
+      "expect": "visible",
+      "target": "app.ready"
+    },
+    {
+      "expect": "hidden",
+      "target": "app.loading"
+    },
+    {
+      "expect": "enabled",
+      "target": "release.create"
+    }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["release.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "pixelRatio": 2,
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "create-release",
+      "kind": "callout",
+      "target": "release.create",
+      "content": {
+        "en": "Start the release from one explicit action.",
+        "da": "Start udgivelsen fra én tydelig handling.",
+        "nb": "Start utgivelsen fra én tydelig handling."
+      },
+      "placement": {
+        "side": "auto",
+        "offset": 20
+      },
+      "connector": {
+        "kind": "arrow",
+        "anchor": "edge"
+      },
+      "emphasis": {
+        "kind": "outline",
+        "padding": 5
+      }
+    }
+  ],
+  "accessibility": {
+    "alt": {
+      "en": "The empty Releases page with the Create release action highlighted.",
+      "da": "Den tomme side Udgivelser med handlingen Opret udgivelse fremhævet.",
+      "nb": "Den tomme siden Utgivelser med handlingen Opprett utgivelse fremhevet."
+    }
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

@@ -19,6 +19,7 @@
   "scripts": {
     "build": "pnpm --filter './packages/**' -r build && pnpm --filter @guideshot/site build",
     "changeset": "changeset",
+    "check:ui-boundaries": "node scripts/check-ui-boundaries.mjs",
     "dev": "pnpm --filter @guideshot/site dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -45,8 +46,7 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "sharp",
-      "unrs-resolver",
-      "workerd"
+      "unrs-resolver"
     ]
   }
 }

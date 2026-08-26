@@ -219,13 +219,35 @@ describe('composition document', () => {
       },
     );
     expect(
-      resolveOutputSize(scene, { formats: ['png'], width: 300, height: 200 }),
+      resolveOutputSize(scene, { formats: ['png'], width: 300, height: 192 }),
     ).toEqual({
       width: 300,
-      height: 200,
+      height: 192,
     });
+    expect(() =>
+      resolveOutputSize(scene, { formats: ['png'], width: 300, height: 200 }),
+    ).toThrow('do not preserve the captured frame aspect ratio');
     expect(normalizeFormats(['webp', 'png', 'webp'])).toEqual(['png', 'webp']);
     expect(mimeTypeFor('png')).toBe('image/png');
     expect(mimeTypeFor('webp')).toBe('image/webp');
   });
+
+  it.each([
+    ['16:9', 1600, 900, 1920, 1080],
+    ['4:3', 1200, 900, 1600, 1200],
+    ['9:16', 900, 1600, 1080, 1920],
+  ] as const)(
+    'preserves a %s frame when deriving output dimensions',
+    (_name, frameWidth, frameHeight, width, height) => {
+      expect(
+        resolveOutputSize(
+          {
+            ...scene,
+            frame: { ...scene.frame, width: frameWidth, height: frameHeight },
+          },
+          { formats: ['webp'], width },
+        ),
+      ).toEqual({ width, height });
+    },
+  );
 });

@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.stability.ready",
+  "title": "Verified ready state",
+  "tags": ["showcase", "stability", "ready"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=stability&state=delayed" },
+  "ready": [
+    { "expect": "visible", "target": "stability.ready" },
+    {
+      "expect": "text",
+      "target": "stability.ready",
+      "value": "1,284 active sessions"
+    }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "ready-proof",
+      "kind": "callout",
+      "target": "stability.ready",
+      "content": "Capture begins only after the declared result is visible.",
+      "placement": { "side": "bottom", "offset": 16 },
+      "connector": { "kind": "arrow", "anchor": "edge" },
+      "emphasis": { "kind": "outline", "padding": 5 }
+    }
+  ],
+  "accessibility": {
+    "alt": "The activity report after the fixed dataset has loaded and passed readiness checks."
+  },
+  "output": { "formats": ["webp"], "width": 1600, "quality": 92 }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.emphasis.spotlight",
+  "title": "Callout with spotlight",
+  "tags": ["showcase", "emphasis", "spotlight"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=annotations" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "spotlight-emphasis",
+      "kind": "callout",
+      "target": "showcase.metric",
+      "content": "Active users grew this week.",
+      "placement": { "side": "bottom", "offset": 16 },
+      "connector": { "kind": "arrow", "anchor": "edge" },
+      "emphasis": { "kind": "spotlight", "padding": 8 }
+    }
+  ],
+  "accessibility": {
+    "alt": "A project metric spotlighted behind a connected callout."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

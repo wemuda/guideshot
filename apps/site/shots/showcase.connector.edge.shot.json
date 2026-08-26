@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.connector.edge",
+  "title": "Edge connector",
+  "tags": ["showcase", "connector", "edge"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=annotations" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "edge-connector",
+      "kind": "callout",
+      "target": "showcase.primary",
+      "content": "The connector stops at the target edge.",
+      "placement": { "side": "left", "offset": 18 },
+      "connector": { "kind": "arrow", "anchor": "edge" }
+    }
+  ],
+  "accessibility": {
+    "alt": "A callout connected to the edge of the Open report action."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

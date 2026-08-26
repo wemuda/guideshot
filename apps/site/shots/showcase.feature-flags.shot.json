@@ -1,0 +1,47 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.feature-flags",
+  "title": "Feature flag states",
+  "tags": ["showcase", "matrix", "feature-flag"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=features" },
+  "matrix": {
+    "dimensions": {
+      "feature": ["control", "enabled", "experiment"]
+    }
+  },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "visible", "target": "feature.panel" }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "feature-action",
+      "kind": "callout",
+      "target": "feature.action",
+      "content": "This action follows the selected rollout state.",
+      "placement": { "side": "left", "offset": 18 },
+      "connector": { "kind": "arrow", "anchor": "edge" },
+      "emphasis": { "kind": "outline", "padding": 5 }
+    }
+  ],
+  "accessibility": {
+    "alt": "The analytics workspace in a declared feature flag state."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

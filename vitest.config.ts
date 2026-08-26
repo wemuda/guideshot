@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    alias: { '@': new URL('./apps/site', import.meta.url).pathname },
+  },
   test: {
     coverage: {
       reporter: ['text', 'json-summary'],

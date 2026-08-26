@@ -1,0 +1,78 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "release.review",
+  "title": "Review release changes",
+  "tags": ["release", "connected-guide", "review"],
+  "profile": "guide.desktop",
+  "page": {
+    "path": "/demo/releases?step=review"
+  },
+  "matrix": {
+    "dimensions": {
+      "locale": ["en", "da", "nb"],
+      "theme": ["light", "dark"]
+    }
+  },
+  "ready": [
+    {
+      "expect": "visible",
+      "target": "app.ready"
+    },
+    {
+      "expect": "hidden",
+      "target": "app.loading"
+    },
+    {
+      "expect": "visible",
+      "target": "release.notes"
+    }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["release.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "pixelRatio": 2,
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "review-release-notes",
+      "kind": "callout",
+      "target": "release.notes",
+      "content": {
+        "en": "Review the changes and edit the release notes.",
+        "da": "Gennemgå ændringerne, og redigér udgivelsesnoterne.",
+        "nb": "Gjennomgå endringene og rediger utgivelsesnotatene."
+      },
+      "placement": {
+        "side": "auto",
+        "offset": 20
+      },
+      "connector": {
+        "kind": "arrow",
+        "anchor": "edge"
+      },
+      "emphasis": {
+        "kind": "spotlight",
+        "padding": 6
+      }
+    }
+  ],
+  "accessibility": {
+    "alt": {
+      "en": "The release form with its release notes field highlighted for review.",
+      "da": "Udgivelsesformularen med feltet til udgivelsesnoter fremhævet til gennemgang.",
+      "nb": "Utgivelsesskjemaet med feltet for utgivelsesnotater fremhevet for gjennomgang."
+    }
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

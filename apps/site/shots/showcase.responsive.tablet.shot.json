@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.responsive.tablet",
+  "title": "Tablet profile",
+  "tags": ["showcase", "responsive", "tablet"],
+  "profile": "guide.tablet",
+  "page": { "path": "/demo/showcase?scene=responsive" },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "visible", "target": "responsive.command" }
+  ],
+  "capture": {
+    "frame": {
+      "target": "showcase.canvas",
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "accessibility": {
+    "alt": "The workspace captured with the tablet profile and compact command access."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "quality": 92
+  }
+}
