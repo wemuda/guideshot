@@ -3,6 +3,21 @@
   "version": "0.1.0",
   "description": "Command-line and programmatic orchestration for GuideShot.",
   "license": "MIT",
+  "keywords": [
+    "guideshot",
+    "cli",
+    "screenshots",
+    "documentation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wemuda/guideshot.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/wemuda/guideshot#readme",
+  "bugs": {
+    "url": "https://github.com/wemuda/guideshot/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [
@@ -12,6 +27,7 @@
     "guideshot": "./bin/guideshot.mjs"
   },
   "publishConfig": {
+    "access": "public",
     "bin": {
       "guideshot": "./dist/bin.js"
     }

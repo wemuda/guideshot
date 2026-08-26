@@ -3,11 +3,29 @@
   "version": "0.1.0",
   "description": "Portable GuideShot recipe and manifest schemas.",
   "license": "MIT",
+  "keywords": [
+    "guideshot",
+    "screenshots",
+    "json-schema",
+    "documentation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wemuda/guideshot.git",
+    "directory": "packages/schema"
+  },
+  "homepage": "https://github.com/wemuda/guideshot#readme",
+  "bugs": {
+    "url": "https://github.com/wemuda/guideshot/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

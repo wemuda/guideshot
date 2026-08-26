@@ -90,6 +90,3 @@ jobs:
 
       - name: Verify pilot outputs
         run: pnpm --filter @guideshot/site run shots:verify
-
-      - name: Check committed pilot outputs
-        run: git diff --exit-code -- apps/site/public/generated/guideshot

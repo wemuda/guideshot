@@ -25,12 +25,15 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "pack:check": "pnpm --filter './packages/**' -r build && pnpm --filter './packages/**' -r pack --dry-run",
+    "release:publish": "changeset publish",
+    "release:status": "changeset status --verbose",
+    "release:version": "changeset version",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.29.7",
+    "@changesets/cli": "^3.0.1",
     "@eslint/js": "^9.39.4",
     "@types/node": "^22.19.19",
     "eslint": "^9.39.4",

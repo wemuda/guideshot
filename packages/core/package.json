@@ -3,6 +3,22 @@
   "version": "0.1.0",
   "description": "Portable compiler and contracts for GuideShot.",
   "license": "MIT",
+  "keywords": [
+    "guideshot",
+    "screenshots",
+    "documentation",
+    "visual-testing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wemuda/guideshot.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/wemuda/guideshot#readme",
+  "bugs": {
+    "url": "https://github.com/wemuda/guideshot/issues"
+  },
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -13,6 +29,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "prepack": "pnpm run build && test -f dist/index.js && test -f dist/index.d.ts",

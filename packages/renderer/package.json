@@ -3,11 +3,29 @@
   "version": "0.1.0",
   "description": "Deterministic offline annotation renderer for GuideShot scenes.",
   "license": "MIT",
+  "keywords": [
+    "guideshot",
+    "screenshots",
+    "annotations",
+    "documentation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wemuda/guideshot.git",
+    "directory": "packages/renderer"
+  },
+  "homepage": "https://github.com/wemuda/guideshot#readme",
+  "bugs": {
+    "url": "https://github.com/wemuda/guideshot/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
