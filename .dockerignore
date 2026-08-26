@@ -1,0 +1,9 @@
+.changeset
+.git
+.github
+.next
+node_modules
+**/.next
+**/dist
+**/node_modules
+*.log

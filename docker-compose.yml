@@ -1,0 +1,23 @@
+services:
+  site:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      HOSTNAME: 0.0.0.0
+      NODE_ENV: production
+      PORT: '3000'
+      SERVICE_FQDN_SITE_3000: ''
+    expose:
+      - '3000'
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:3000/', (response) => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
