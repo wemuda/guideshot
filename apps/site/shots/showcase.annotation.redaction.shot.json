@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.annotation.redaction",
+  "title": "Redaction annotation",
+  "tags": ["showcase", "annotation", "redaction"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=annotations" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "forecast-redaction",
+      "kind": "redaction",
+      "target": "showcase.secret",
+      "padding": 3
+    }
+  ],
+  "accessibility": {
+    "alt": "The project health dashboard with the confidential forecast value redacted."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

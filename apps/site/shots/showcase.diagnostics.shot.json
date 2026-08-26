@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.diagnostics",
+  "title": "Actionable diagnostic states",
+  "tags": ["showcase", "diagnostics"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=diagnostics" },
+  "matrix": {
+    "dimensions": {
+      "diagnostic": ["missing", "duplicate", "hidden", "unstable", "origin"]
+    }
+  },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "visible", "target": "diagnostic.result" }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "accessibility": {
+    "alt": "A GuideShot diagnostic with a stable code, recipe context, and corrective action."
+  },
+  "output": { "formats": ["webp"], "width": 1600, "quality": 92 }
+}

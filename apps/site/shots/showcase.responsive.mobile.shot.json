@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.responsive.mobile",
+  "title": "Mobile profile",
+  "tags": ["showcase", "responsive", "mobile"],
+  "profile": "guide.mobile",
+  "page": { "path": "/demo/showcase?scene=responsive" },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "visible", "target": "responsive.mobile-nav" }
+  ],
+  "capture": {
+    "pixelRatio": 2,
+    "frame": {
+      "target": "showcase.canvas",
+      "aspectRatio": "9:16",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "accessibility": {
+    "alt": "The workspace captured with the mobile profile and compact navigation control."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1080,
+    "quality": 92
+  }
+}

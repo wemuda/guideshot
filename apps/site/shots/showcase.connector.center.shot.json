@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.connector.center",
+  "title": "Center connector",
+  "tags": ["showcase", "connector", "center"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=annotations" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "center-connector",
+      "kind": "callout",
+      "target": "showcase.primary",
+      "content": "The connector points to the target center.",
+      "placement": { "side": "left", "offset": 18 },
+      "connector": { "kind": "arrow", "anchor": "center" }
+    }
+  ],
+  "accessibility": {
+    "alt": "A callout connected to the center of the Open report action."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

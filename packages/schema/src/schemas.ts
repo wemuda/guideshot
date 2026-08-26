@@ -448,11 +448,46 @@ const OutlineAnnotationSchema = Type.Object(
   StrictObjectOptions,
 );
 
+const MarkerAnnotationSchema = Type.Object(
+  {
+    id: IdentifierSchema,
+    kind: Type.Literal('marker'),
+    target: TargetSchema,
+    content: Type.Optional(LocalizedTextSchema),
+    placement: Type.Optional(AnnotationPlacementSchema),
+  },
+  StrictObjectOptions,
+);
+
+const LabelAnnotationSchema = Type.Object(
+  {
+    id: IdentifierSchema,
+    kind: Type.Literal('label'),
+    target: TargetSchema,
+    content: LocalizedTextSchema,
+    placement: Type.Optional(AnnotationPlacementSchema),
+  },
+  StrictObjectOptions,
+);
+
+const RedactionAnnotationSchema = Type.Object(
+  {
+    id: IdentifierSchema,
+    kind: Type.Literal('redaction'),
+    target: TargetSchema,
+    padding: Type.Optional(Type.Number({ minimum: 0 })),
+  },
+  StrictObjectOptions,
+);
+
 export const AnnotationSchema = Type.Union([
   CalloutAnnotationSchema,
   ArrowAnnotationSchema,
   SpotlightAnnotationSchema,
   OutlineAnnotationSchema,
+  MarkerAnnotationSchema,
+  LabelAnnotationSchema,
+  RedactionAnnotationSchema,
 ]);
 export type Annotation = Static<typeof AnnotationSchema>;
 

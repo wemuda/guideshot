@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.matrix.capabilities",
+  "title": "Feature, role, and plan combinations",
+  "tags": ["showcase", "matrix", "role", "feature-flag"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=matrix" },
+  "matrix": {
+    "dimensions": {
+      "feature": ["control", "enabled", "experiment"],
+      "role": ["viewer", "editor", "admin"],
+      "plan": ["starter", "pro"]
+    },
+    "exclude": [
+      { "feature": "control" },
+      { "feature": "enabled", "role": "viewer", "plan": "pro" },
+      { "feature": "enabled", "role": "admin", "plan": "starter" },
+      { "feature": "experiment", "role": "viewer" },
+      { "feature": "experiment", "role": "editor" },
+      { "feature": "experiment", "plan": "starter" }
+    ],
+    "include": [{ "feature": "control", "role": "viewer", "plan": "starter" }]
+  },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "visible", "target": "matrix.permissions" }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "capabilities",
+      "kind": "callout",
+      "target": "matrix.permissions",
+      "content": "Only supported feature, role, and plan combinations are published.",
+      "placement": { "side": "bottom", "offset": 16 },
+      "connector": { "kind": "arrow", "anchor": "edge" }
+    }
+  ],
+  "accessibility": {
+    "alt": "Team permissions for a supported feature, role, and plan combination."
+  },
+  "output": { "formats": ["webp"], "width": 1600, "quality": 92 }
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.stability.loading",
+  "title": "Observable loading state",
+  "tags": ["showcase", "stability", "loading"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=stability&state=loading" },
+  "ready": [{ "expect": "visible", "target": "stability.loading" }],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "accessibility": {
+    "alt": "The activity report in its intentional loading state."
+  },
+  "output": { "formats": ["webp"], "width": 1600, "quality": 92 }
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.automation.before",
+  "title": "Initial application state",
+  "tags": ["showcase", "automation", "prepare"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=automation" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "filter-action",
+      "kind": "callout",
+      "target": "automation.filter",
+      "content": "Prepare the product state with a typed action.",
+      "placement": { "side": "left", "offset": 18 },
+      "connector": { "kind": "arrow", "anchor": "edge" }
+    }
+  ],
+  "accessibility": {
+    "alt": "The projects list before the Active only filter is applied."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

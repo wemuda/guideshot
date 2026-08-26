@@ -1,0 +1,18 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.framing.page",
+  "title": "Full page",
+  "tags": ["showcase", "framing", "page"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=framing" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": { "kind": "page" },
+    "stability": "documentation"
+  },
+  "accessibility": {
+    "alt": "The complete revenue health page including its surrounding application canvas."
+  },
+  "output": { "formats": ["webp"], "width": 1600, "quality": 92 }
+}

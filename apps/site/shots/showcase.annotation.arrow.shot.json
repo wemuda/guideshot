@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.annotation.arrow",
+  "title": "Arrow annotation",
+  "tags": ["showcase", "annotation", "arrow"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=annotations" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "primary-arrow",
+      "kind": "arrow",
+      "target": "showcase.primary",
+      "placement": { "side": "left", "offset": 14 }
+    }
+  ],
+  "accessibility": {
+    "alt": "The project health dashboard with an arrow pointing to the Open report action."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

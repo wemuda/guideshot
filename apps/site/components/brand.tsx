@@ -1,26 +1,18 @@
+import { FocusIcon } from '@hugeicons/core-free-icons';
+import { Icon } from '@guideshot/ui/components/icon';
 import Link from 'next/link';
 
-import { cn } from '@/lib/utils';
-
-type BrandProps = {
-  className?: string;
-  compact?: boolean;
-  href?: string;
-};
-
-export function Brand({ className, compact = false, href = '/' }: BrandProps) {
+export function Brand() {
   return (
     <Link
-      className={cn(
-        'flex items-center gap-3 font-bold tracking-[-0.03em]',
-        className,
-      )}
-      href={href}
+      aria-label="GuideShot"
+      className="inline-flex shrink-0 items-center gap-2.5 rounded-md text-card-title font-semibold tracking-card-title outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      href="/"
     >
-      <span className="grid size-8 place-items-center rounded-lg bg-foreground text-sm font-black text-background">
-        G
+      <span className="grid size-7 place-items-center rounded-md bg-foreground text-background">
+        <Icon icon={FocusIcon} size={16} />
       </span>
-      {!compact && <span>GuideShot</span>}
+      <span className="hidden min-[420px]:inline">GuideShot</span>
     </Link>
   );
 }

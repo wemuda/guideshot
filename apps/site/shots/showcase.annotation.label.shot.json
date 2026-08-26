@@ -1,0 +1,37 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.annotation.label",
+  "title": "Label annotation",
+  "tags": ["showcase", "annotation", "label"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=annotations" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "momentum-label",
+      "kind": "label",
+      "target": "showcase.badge",
+      "content": "Momentum",
+      "placement": { "side": "bottom", "offset": 10 }
+    }
+  ],
+  "accessibility": {
+    "alt": "The project health dashboard with the Completion change labeled Momentum."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}

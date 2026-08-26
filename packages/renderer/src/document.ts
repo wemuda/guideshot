@@ -74,6 +74,17 @@ export function resolveOutputSize(
   const density = scene.viewport.pixelRatio;
   assertPositive(density, 'scene.viewport.pixelRatio');
 
+  if (requestedWidth !== undefined && requestedHeight !== undefined) {
+    const width = checkedDimension(requestedWidth, 'output.width');
+    const height = checkedDimension(requestedHeight, 'output.height');
+    const derivedHeight = Math.round((width * frameHeight) / frameWidth);
+    if (Math.abs(derivedHeight - height) > 1) {
+      throw new RangeError(
+        `Output dimensions ${width}x${height} do not preserve the captured frame aspect ratio.`,
+      );
+    }
+  }
+
   const width =
     requestedWidth !== undefined
       ? checkedDimension(requestedWidth, 'output.width')

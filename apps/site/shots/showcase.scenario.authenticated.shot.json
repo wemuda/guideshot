@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.scenario.authenticated",
+  "title": "Authenticated synthetic state",
+  "tags": ["showcase", "scenario", "authenticated"],
+  "profile": "guide.desktop",
+  "scenario": {
+    "use": "showcase:authenticated-workspace",
+    "with": {
+      "workspace": "Launch workspace",
+      "user": "Alex Kim",
+      "role": "admin"
+    }
+  },
+  "page": { "path": "/demo/showcase?scene=scenario" },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "text", "target": "scenario.user", "value": "Alex Kim" }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "prepared-workspace",
+      "kind": "callout",
+      "target": "scenario.workspace",
+      "content": "The scenario installs a synthetic identity before navigation.",
+      "placement": { "side": "bottom", "offset": 16 },
+      "connector": { "kind": "arrow", "anchor": "edge" },
+      "emphasis": { "kind": "outline", "padding": 5 }
+    }
+  ],
+  "accessibility": {
+    "alt": "The Launch workspace loaded with the synthetic Alex Kim administrator session."
+  },
+  "output": { "formats": ["webp"], "width": 1600, "quality": 92 }
+}

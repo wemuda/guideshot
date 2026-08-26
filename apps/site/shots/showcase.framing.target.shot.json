@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.framing.target",
+  "title": "One target",
+  "tags": ["showcase", "framing", "target"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=framing" },
+  "ready": [{ "expect": "visible", "target": "framing.panel" }],
+  "capture": {
+    "frame": {
+      "target": "framing.panel",
+      "padding": 28,
+      "aspectRatio": "16:9",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "accessibility": {
+    "alt": "The revenue trend panel framed as a focused widescreen artifact."
+  },
+  "output": { "formats": ["webp"], "width": 1600, "quality": 92 }
+}

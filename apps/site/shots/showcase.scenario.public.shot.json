@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.scenario.public",
+  "title": "Public product state",
+  "tags": ["showcase", "scenario", "public"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=scenario" },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "visible", "target": "scenario.workspace" }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "accessibility": {
+    "alt": "The public Acme workspace without an authenticated documentation session."
+  },
+  "output": { "formats": ["webp"], "width": 1600, "quality": 92 }
+}

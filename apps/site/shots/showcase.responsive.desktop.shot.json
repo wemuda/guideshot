@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.responsive.desktop",
+  "title": "Desktop profile",
+  "tags": ["showcase", "responsive", "desktop"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=responsive" },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "visible", "target": "responsive.sidebar" }
+  ],
+  "capture": {
+    "frame": {
+      "target": "showcase.canvas",
+      "aspectRatio": "16:9",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "accessibility": {
+    "alt": "The workspace captured with the desktop profile and persistent navigation."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1920,
+    "quality": 92
+  }
+}

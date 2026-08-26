@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.framing.region",
+  "title": "Explicit region",
+  "tags": ["showcase", "framing", "region"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=framing" },
+  "ready": [{ "expect": "visible", "target": "app.ready" }],
+  "capture": {
+    "frame": {
+      "region": { "x": 280, "y": 190, "width": 720, "height": 520 },
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "accessibility": {
+    "alt": "A fixed region containing the revenue trend and supporting metric."
+  },
+  "output": { "formats": ["webp"], "width": 1600, "quality": 92 }
+}

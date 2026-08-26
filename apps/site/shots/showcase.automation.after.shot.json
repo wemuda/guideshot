@@ -1,0 +1,48 @@
+{
+  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "version": 1,
+  "id": "showcase.automation.after",
+  "title": "Prepared and verified state",
+  "tags": ["showcase", "automation", "ready"],
+  "profile": "guide.desktop",
+  "page": { "path": "/demo/showcase?scene=automation" },
+  "prepare": [{ "do": "click", "target": "automation.filter" }],
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "visible", "target": "automation.filtered" },
+    {
+      "expect": "text",
+      "target": "automation.filtered",
+      "value": "Filter applied · 2 active projects"
+    }
+  ],
+  "capture": {
+    "frame": {
+      "around": ["showcase.canvas"],
+      "padding": 12,
+      "aspectRatio": "4:3",
+      "fit": "expand"
+    },
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "verified-state",
+      "kind": "callout",
+      "target": "automation.filtered",
+      "content": "Capture only after the expected state is visible.",
+      "placement": { "side": "bottom", "offset": 16 },
+      "connector": { "kind": "arrow", "anchor": "edge" },
+      "emphasis": { "kind": "outline", "padding": 4 }
+    }
+  ],
+  "accessibility": {
+    "alt": "The projects list after the Active only filter is applied and verified."
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1600,
+    "height": 1200,
+    "quality": 92
+  }
+}
