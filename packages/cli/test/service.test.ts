@@ -97,14 +97,33 @@ describe('GuideShotService', () => {
   it('captures once, persists only a sanitized scene cache, and recomposes offline', async () => {
     const fixture = await createFixture();
     roots.push(fixture.root);
+    const progress: unknown[] = [];
     const service = createGuideShotService({
       cwd: fixture.root,
       config: fixture.config,
       fetch: fixture.fetch,
+      onCaptureProgress: (event) => progress.push(event),
     });
 
     const captured = await service.capture();
     expect(captured.ok).toBe(true);
+    expect(progress).toEqual([
+      { phase: 'preparing', completed: 0, total: 1 },
+      {
+        phase: 'capturing',
+        completed: 0,
+        total: 1,
+        jobKey: 'account.balance::mode=basic',
+      },
+      {
+        phase: 'capturing',
+        completed: 1,
+        total: 1,
+        jobKey: 'account.balance::mode=basic',
+      },
+      { phase: 'publishing', completed: 1, total: 1 },
+      { phase: 'complete', completed: 1, total: 1 },
+    ]);
     expect(fixture.state).toMatchObject({
       serverProbes: 1,
       scenarioPrepares: 1,

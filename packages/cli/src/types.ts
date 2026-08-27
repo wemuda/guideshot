@@ -54,15 +54,29 @@ export interface CommandReport {
   readonly outputs?: readonly string[];
 }
 
+export type CaptureProgressPhase =
+  'preparing' | 'capturing' | 'publishing' | 'complete';
+
+export interface CaptureProgress {
+  readonly phase: CaptureProgressPhase;
+  readonly completed: number;
+  readonly total: number;
+  readonly jobKey?: string;
+}
+
 export interface ServiceOptions {
   readonly cwd?: string;
   readonly config?: GuideShotConfig;
   readonly configFile?: string;
   readonly signal?: AbortSignal;
   readonly fetch?: typeof globalThis.fetch;
+  readonly onCaptureProgress?: (progress: CaptureProgress) => void;
 }
 
 export interface CliIo {
   readonly stdout: { write(chunk: string): unknown };
-  readonly stderr: { write(chunk: string): unknown };
+  readonly stderr: {
+    write(chunk: string): unknown;
+    readonly isTTY?: boolean;
+  };
 }

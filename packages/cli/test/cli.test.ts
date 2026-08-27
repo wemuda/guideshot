@@ -3,7 +3,7 @@ import { rm } from 'node:fs/promises';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { parseCliArgs } from '../src/args.js';
-import { runCli } from '../src/cli.js';
+import { formatCaptureProgress, runCli } from '../src/cli.js';
 import { createGuideShotService } from '../src/service.js';
 import type { CliIo } from '../src/types.js';
 import { createFixture } from './helpers.js';
@@ -17,6 +17,19 @@ afterEach(async () => {
 });
 
 describe('CLI', () => {
+  it('formats capture progress with the completed job count and active job', () => {
+    expect(
+      formatCaptureProgress({
+        phase: 'capturing',
+        completed: 2,
+        total: 4,
+        jobKey: 'account.balance::mode=pro',
+      }),
+    ).toBe(
+      '[============            ] 2/4  50% Capturing account.balance::mode=pro',
+    );
+  });
+
   it('parses repeatable selectors with Node parseArgs semantics', () => {
     expect(
       parseCliArgs([
