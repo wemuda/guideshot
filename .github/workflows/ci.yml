@@ -14,8 +14,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  classify:
+    name: Classify main push
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      pending_changesets: ${{ steps.changes.outputs.pending_changesets }}
+      release_only: ${{ steps.changes.outputs.release_only }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Detect generated version commit
+        id: changes
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          release_only=false
+          if [[ "$COMMIT_MESSAGE" == "chore: version packages"* ]]; then
+            unexpected="$(git diff --name-only "$GITHUB_SHA^" "$GITHUB_SHA" | awk '!(/^\.changeset\/.*\.md$/ || /^packages\/[^/]+\/CHANGELOG\.md$/ || /^packages\/[^/]+\/package\.json$/)')"
+            if [[ -z "$unexpected" ]]; then
+              release_only=true
+            fi
+          fi
+          pending_changesets=false
+          if find .changeset -maxdepth 1 -name '*.md' -print -quit | grep -q .; then
+            pending_changesets=true
+          fi
+          echo "pending_changesets=$pending_changesets" >> "$GITHUB_OUTPUT"
+          echo "release_only=$release_only" >> "$GITHUB_OUTPUT"
+
   phase-one:
     name: Phase 1
+    needs: classify
+    if: >-
+      always() &&
+      (github.event_name != 'push' || needs.classify.outputs.release_only != 'true')
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -92,3 +130,65 @@ jobs:
 
       - name: Verify pilot outputs
         run: pnpm --filter @guideshot/site run shots:verify
+
+  version:
+    needs: [classify, phase-one]
+    if: >-
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.classify.outputs.pending_changesets == 'true' &&
+      needs.phase-one.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.30.3
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.18.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Open or update the version pull request
+        uses: changesets/action/version@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
+        with:
+          script: pnpm release:version
+          commit-message: 'chore: version packages [skip ci]'
+          pr-title: 'chore: version packages'
+          pr-base-branch: main
+
+  dispatch-release:
+    needs: [classify, phase-one]
+    if: >-
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.classify.outputs.release_only == 'true' &&
+      needs.phase-one.result == 'skipped'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Start trusted publishing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run release.yml --ref "$GITHUB_REF_NAME"
