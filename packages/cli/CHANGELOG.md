@@ -1,5 +1,11 @@
 # @guideshot/cli
 
+## 0.1.2
+
+### Patch Changes
+
+- d845120: Show live job progress while the capture command prepares, captures, and publishes screenshot output.
+
 ## 0.1.1
 
 ### Patch Changes
