@@ -1,6 +1,6 @@
 {
   "name": "@guideshot/playwright",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Chromium capture driver for GuideShot.",
   "license": "MIT",
   "keywords": [
