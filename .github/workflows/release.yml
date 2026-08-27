@@ -126,6 +126,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build package dependencies
+        run: pnpm --filter './packages/**' -r build
+
       - name: Pack release artifacts
         id: changesets
         uses: changesets/action/pack@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
