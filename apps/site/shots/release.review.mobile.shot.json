@@ -1,0 +1,56 @@
+{
+  "$schema": "https://guideshot.dev.wemuda.com/schemas/recipe.v1.json",
+  "version": 1,
+  "id": "release.review.mobile",
+  "title": "Review release changes on mobile",
+  "tags": ["release", "connected-guide", "review", "mobile"],
+  "profile": "guide.mobile",
+  "page": { "path": "/demo/releases?step=review" },
+  "matrix": {
+    "dimensions": {
+      "locale": ["en", "da", "nb"],
+      "theme": ["light", "dark"]
+    }
+  },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "hidden", "target": "app.loading" },
+    { "expect": "visible", "target": "release.notes" }
+  ],
+  "capture": {
+    "frame": {
+      "target": "release.canvas",
+      "aspectRatio": "9:16",
+      "fit": "crop"
+    },
+    "pixelRatio": 2,
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "review-release-notes",
+      "kind": "callout",
+      "target": "release.notes",
+      "content": {
+        "en": "Review the changes and edit the release notes.",
+        "da": "Gennemgå ændringerne, og redigér udgivelsesnoterne.",
+        "nb": "Gjennomgå endringene og rediger utgivelsesnotatene."
+      },
+      "placement": { "side": "auto", "offset": 20 },
+      "connector": { "kind": "arrow", "anchor": "edge" },
+      "emphasis": { "kind": "spotlight", "padding": 6 }
+    }
+  ],
+  "accessibility": {
+    "alt": {
+      "en": "The mobile release form with its release notes field highlighted for review.",
+      "da": "Den mobile udgivelsesformular med feltet til udgivelsesnoter fremhævet til gennemgang.",
+      "nb": "Det mobile utgivelsesskjemaet med feltet for utgivelsesnotater fremhevet for gjennomgang."
+    }
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1080,
+    "quality": 92
+  }
+}

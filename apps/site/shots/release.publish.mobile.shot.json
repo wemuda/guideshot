@@ -1,0 +1,56 @@
+{
+  "$schema": "https://guideshot.dev.wemuda.com/schemas/recipe.v1.json",
+  "version": 1,
+  "id": "release.publish.mobile",
+  "title": "Publish the release on mobile",
+  "tags": ["release", "connected-guide", "publish", "mobile"],
+  "profile": "guide.mobile",
+  "page": { "path": "/demo/releases?step=publish" },
+  "matrix": {
+    "dimensions": {
+      "locale": ["en", "da", "nb"],
+      "theme": ["light", "dark"]
+    }
+  },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "hidden", "target": "app.loading" },
+    { "expect": "enabled", "target": "release.publish" }
+  ],
+  "capture": {
+    "frame": {
+      "target": "release.canvas",
+      "aspectRatio": "9:16",
+      "fit": "crop"
+    },
+    "pixelRatio": 2,
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "publish-release",
+      "kind": "callout",
+      "target": "release.publish",
+      "content": {
+        "en": "Publish the release when the notes are ready.",
+        "da": "Udgiv versionen, når noterne er klar.",
+        "nb": "Publiser utgivelsen når notatene er klare."
+      },
+      "placement": { "side": "auto", "offset": 20 },
+      "connector": { "kind": "arrow", "anchor": "edge" },
+      "emphasis": { "kind": "outline", "padding": 5 }
+    }
+  ],
+  "accessibility": {
+    "alt": {
+      "en": "Release v1.3.0 ready to publish on mobile with the Publish release action highlighted.",
+      "da": "Udgivelse v1.3.0 klar til udgivelse på mobil med handlingen Udgiv version fremhævet.",
+      "nb": "Utgivelse v1.3.0 klar til publisering på mobil med handlingen Publiser utgivelse fremhevet."
+    }
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1080,
+    "quality": 92
+  }
+}

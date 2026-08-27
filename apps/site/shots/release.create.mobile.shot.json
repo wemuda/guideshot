@@ -1,0 +1,56 @@
+{
+  "$schema": "https://guideshot.dev.wemuda.com/schemas/recipe.v1.json",
+  "version": 1,
+  "id": "release.create.mobile",
+  "title": "Create the first release on mobile",
+  "tags": ["release", "connected-guide", "create", "mobile"],
+  "profile": "guide.mobile",
+  "page": { "path": "/demo/releases?step=create" },
+  "matrix": {
+    "dimensions": {
+      "locale": ["en", "da", "nb"],
+      "theme": ["light", "dark"]
+    }
+  },
+  "ready": [
+    { "expect": "visible", "target": "app.ready" },
+    { "expect": "hidden", "target": "app.loading" },
+    { "expect": "enabled", "target": "release.create" }
+  ],
+  "capture": {
+    "frame": {
+      "target": "release.canvas",
+      "aspectRatio": "9:16",
+      "fit": "crop"
+    },
+    "pixelRatio": 2,
+    "stability": "documentation"
+  },
+  "annotations": [
+    {
+      "id": "create-release",
+      "kind": "callout",
+      "target": "release.create",
+      "content": {
+        "en": "Start the release from one explicit action.",
+        "da": "Start udgivelsen fra én tydelig handling.",
+        "nb": "Start utgivelsen fra én tydelig handling."
+      },
+      "placement": { "side": "auto", "offset": 20 },
+      "connector": { "kind": "arrow", "anchor": "edge" },
+      "emphasis": { "kind": "outline", "padding": 5 }
+    }
+  ],
+  "accessibility": {
+    "alt": {
+      "en": "The mobile Releases page with the Create release action highlighted.",
+      "da": "Mobilsiden Udgivelser med handlingen Opret udgivelse fremhævet.",
+      "nb": "Mobilsiden Utgivelser med handlingen Opprett utgivelse fremhevet."
+    }
+  },
+  "output": {
+    "formats": ["webp"],
+    "width": 1080,
+    "quality": 92
+  }
+}

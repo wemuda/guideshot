@@ -50,6 +50,12 @@ describe('writeSchemas', () => {
     expect(recipe).toEqual(JSON.parse(JSON.stringify(RecipeSchema)));
     expect((manifest as { $schema: string }).$schema).toBe(JSON_SCHEMA_DIALECT);
     expect((recipe as { $schema: string }).$schema).toBe(JSON_SCHEMA_DIALECT);
+    expect((recipe as { $id: string }).$id).toBe(
+      'https://guideshot.dev.wemuda.com/schemas/recipe.v1.json',
+    );
+    expect((manifest as { $id: string }).$id).toBe(
+      'https://guideshot.dev.wemuda.com/schemas/manifest.v1.json',
+    );
     await expect(verifySchemas(directory)).resolves.toEqual(paths);
   });
 

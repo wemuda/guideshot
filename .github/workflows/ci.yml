@@ -69,6 +69,8 @@ jobs:
 
       - name: Test
         run: pnpm test
+        env:
+          GUIDESHOT_RENDERER_BROWSER_TESTS: '1'
 
       - name: Build
         run: pnpm build

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../packages/schema/dist/schemas/recipe.schema.json",
+  "$schema": "https://guideshot.dev.wemuda.com/schemas/recipe.v1.json",
   "version": 1,
   "id": "showcase.responsive.mobile",
   "title": "Mobile profile",

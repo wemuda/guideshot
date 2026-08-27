@@ -34,7 +34,7 @@ const target = `<button data-guide-target="release.create">
 </button>`;
 
 const recipe = `{
-  "$schema": "https://guideshot.dev/schema/recipe.json",
+  "$schema": "https://guideshot.dev.wemuda.com/schemas/recipe.v1.json",
   "version": 1,
   "id": "release.create",
   "profile": "guide.desktop",

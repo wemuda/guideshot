@@ -27,7 +27,7 @@ const createJsonValueSchema = ($id: string) =>
   );
 
 export const JsonValueSchema = createJsonValueSchema(
-  'https://guideshot.dev/schemas/json-value.json',
+  'https://guideshot.dev.wemuda.com/schemas/json-value.v1.json',
 );
 export type JsonValue = Static<typeof JsonValueSchema>;
 
@@ -585,7 +585,7 @@ export const RecipeSchema = Type.Object(
   },
   {
     $schema: JSON_SCHEMA_DIALECT,
-    $id: 'https://guideshot.dev/schemas/recipe.v1.json',
+    $id: 'https://guideshot.dev.wemuda.com/schemas/recipe.v1.json',
     additionalProperties: false,
     title: 'GuideShot recipe',
   },
@@ -624,7 +624,7 @@ export const PublicManifestSchema = Type.Object(
   },
   {
     $schema: JSON_SCHEMA_DIALECT,
-    $id: 'https://guideshot.dev/schemas/manifest.v1.json',
+    $id: 'https://guideshot.dev.wemuda.com/schemas/manifest.v1.json',
     additionalProperties: false,
     title: 'GuideShot public manifest',
   },

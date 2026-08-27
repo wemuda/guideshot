@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 const firstRecipe = `{
-  "$schema": "https://guideshot.dev/schema/recipe.json",
+  "$schema": "https://guideshot.dev.wemuda.com/schemas/recipe.v1.json",
   "version": 1,
   "id": "release.create",
   "profile": "guide.desktop",

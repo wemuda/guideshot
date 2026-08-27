@@ -62,6 +62,9 @@ importers:
 
   apps/site:
     dependencies:
+      '@guideshot/schema':
+        specifier: workspace:*
+        version: link:../../packages/schema
       '@guideshot/ui':
         specifier: workspace:*
         version: link:../../packages/ui

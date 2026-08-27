@@ -86,7 +86,7 @@ The browser-driver interface permits future Puppeteer, WebDriver, remote-browser
 
 ## 6. Package architecture
 
-GuideShot should be structured as a publishable package family:
+GuideShot is structured as a publishable package family:
 
 ```text
 @guideshot/schema
@@ -1181,6 +1181,8 @@ Rejected because guide sequencing, progress, and completion state are concerns o
 
 ## 32. Initial implementation phases
 
+The package family, Changesets-based npm release workflow, and standalone Next.js documentation deployment are implemented. The remaining phases below describe product capability still to be added, not release or deployment prerequisites.
+
 ### Phase 1: Portable core and one end-to-end pilot
 
 - Core recipe and manifest schemas.
@@ -1215,7 +1217,6 @@ Rejected because guide sequencing, progress, and completion state are concerns o
 
 ### Phase 4: Extraction and ecosystem
 
-- Publish package family.
 - Compatibility fixtures.
 - Public adapter authoring documentation.
 - Optional React consumer.

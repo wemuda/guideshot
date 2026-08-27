@@ -19,6 +19,7 @@
     "shots:verify": "guideshot verify"
   },
   "dependencies": {
+    "@guideshot/schema": "workspace:*",
     "@guideshot/ui": "workspace:*",
     "@hugeicons/core-free-icons": "^4.2.3",
     "next": "16.2.6",

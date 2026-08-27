@@ -234,7 +234,9 @@ manifest directly as its dogfooding showcase. Inside the pilot, the bright Help
 button opens those same compiled screenshots as a guide and selects the exact
 English, Danish, or Norwegian Bokmål light/dark variant currently in use.
 
-The pilot is application code, not `@guideshot/react`, and its Vite-based runtime is not the future `@guideshot/vite` adapter.
+The pilot is application code, not `@guideshot/react`, and its Next.js runtime is independent of the future `@guideshot/vite` adapter.
+
+Public packages are versioned with Changesets and published through the GitHub Actions release workflow with npm trusted publishing. The documentation site is a standalone Next.js application deployed at [guideshot.dev.wemuda.com](https://guideshot.dev.wemuda.com/), which also serves the canonical versioned JSON Schemas.
 
 ## Security and privacy boundary
 
@@ -263,7 +265,7 @@ Package-level work can use `pnpm --filter @guideshot/core test` or the correspon
 
 ## Deliberate deferrals
 
-Phase 2 and later will address the Vite virtual manifest and HMR adapter, optional React consumer, authoring inspector and comparison gallery, compound project schemas, source-set staleness, changed-file planning, registered custom actions, advanced privacy policies, traces and richer reports, concurrency controls, artifact stores, migrations, pinned CI images, and additional browser drivers.
+Phase 2 and later will address the Vite virtual manifest and HMR adapter, optional React consumer, authoring inspector and comparison gallery, compound project schemas, source-set staleness, changed-file planning, registered custom actions, advanced privacy policies, traces and richer reports, concurrency controls, artifact stores, migrations, pinned CI images, and additional browser drivers. Package publication and standalone site deployment are already implemented.
 
 Ordinary frontend builds will consume previously generated assets. They will not implicitly launch a browser, authenticate, seed data, or capture screenshots.
 

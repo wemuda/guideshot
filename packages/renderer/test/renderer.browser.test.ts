@@ -48,7 +48,7 @@ browserDescribe('Chromium renderer', () => {
       scene,
       background,
       annotations: [],
-      output: { formats: ['webp', 'png'], width: 8, height: 6, quality: 90 },
+      output: { formats: ['webp', 'png'], width: 8, height: 8, quality: 90 },
     };
     const { htmlRenderer } = await import('../src/renderer.js');
     const run = await htmlRenderer().open();
@@ -57,7 +57,7 @@ browserDescribe('Chromium renderer', () => {
       const assets = await run.render(request);
       expect(assets.map(({ format }) => format)).toEqual(['png', 'webp']);
       expect(
-        assets.every(({ width, height }) => width === 8 && height === 6),
+        assets.every(({ width, height }) => width === 8 && height === 8),
       ).toBe(true);
       expect([...assets[0]!.bytes.slice(0, 4)]).toEqual([137, 80, 78, 71]);
       expect(Buffer.from(assets[1]!.bytes.slice(0, 4)).toString('ascii')).toBe(
