@@ -170,6 +170,11 @@ export class GuideShotService {
     const context = await this.#loadProject(options.configFile);
     const plan = await this.#createPlan(context, options);
     requireJobs(plan, 'capture');
+    this.#reportCaptureProgress({
+      phase: 'preparing',
+      completed: 0,
+      total: plan.jobs.length,
+    });
     const cache = new SceneCache(context.cacheDir);
     const transaction = await OutputTransaction.create(context.outputDir);
     const fetcher = this.#options.fetch ?? globalThis.fetch;
@@ -201,6 +206,12 @@ export class GuideShotService {
       const composed: ComposedJob[] = [];
       for (const job of plan.jobs) {
         throwIfAborted(this.#options.signal);
+        this.#reportCaptureProgress({
+          phase: 'capturing',
+          completed: composed.length,
+          total: plan.jobs.length,
+          jobKey: job.key,
+        });
         const resolved = await resolveJob(job, context.config, {
           baseUrl: server.baseUrl,
           fetch: fetcher,
@@ -229,6 +240,12 @@ export class GuideShotService {
         } finally {
           await runScenarioCleanup(resolved.cleanup, job);
         }
+        this.#reportCaptureProgress({
+          phase: 'capturing',
+          completed: composed.length,
+          total: plan.jobs.length,
+          jobKey: job.key,
+        });
       }
 
       await closeRenderer(renderer);
@@ -237,6 +254,12 @@ export class GuideShotService {
       driver = undefined;
       await server.close();
       server = undefined;
+
+      this.#reportCaptureProgress({
+        phase: 'publishing',
+        completed: composed.length,
+        total: plan.jobs.length,
+      });
 
       const replacementScope = manifestReplacementScope(plan, options);
       const existing =
@@ -249,6 +272,11 @@ export class GuideShotService {
         replacementScope,
       );
       await transaction.commit(manifest);
+      this.#reportCaptureProgress({
+        phase: 'complete',
+        completed: composed.length,
+        total: plan.jobs.length,
+      });
       return successReport(
         'capture',
         plan,
@@ -390,6 +418,12 @@ export class GuideShotService {
     return selected === undefined
       ? cwd
       : path.dirname(path.resolve(cwd, selected));
+  }
+
+  #reportCaptureProgress(
+    progress: Parameters<NonNullable<ServiceOptions['onCaptureProgress']>>[0],
+  ): void {
+    this.#options.onCaptureProgress?.(progress);
   }
 }
 

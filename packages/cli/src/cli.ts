@@ -4,6 +4,7 @@ import { CLI_USAGE, parseCliArgs } from './args.js';
 import { createGuideShotService, type GuideShotService } from './service.js';
 import type {
   CliIo,
+  CaptureProgress,
   CommandName,
   CommandReport,
   ServiceOptions,
@@ -41,12 +42,19 @@ export async function runCli(
       return 1;
     }
 
+    const progress =
+      parsed.command === 'capture' && !parsed.json
+        ? createCaptureProgressWriter(io)
+        : undefined;
     const service =
       options.service ??
       createGuideShotService({
         ...(options.cwd === undefined ? {} : { cwd: options.cwd }),
         ...(options.signal === undefined ? {} : { signal: options.signal }),
         ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
+        ...(progress === undefined
+          ? {}
+          : { onCaptureProgress: progress.update }),
       } satisfies ServiceOptions);
     const report = await service.execute(parsed.command, {
       ...(parsed.configFile === undefined
@@ -58,6 +66,7 @@ export async function runCli(
         ? {}
         : { dimensionArguments: parsed.dimensions }),
     });
+    progress?.finish();
     writeReport(io, report, parsed.json);
     return report.ok ? 0 : 1;
   } catch (error) {
@@ -73,6 +82,46 @@ export async function runCli(
     writeReport(io, report, json);
     return 1;
   }
+}
+
+export function formatCaptureProgress(progress: CaptureProgress): string {
+  const width = 24;
+  const ratio = progress.total === 0 ? 0 : progress.completed / progress.total;
+  const filled = Math.min(width, Math.floor(ratio * width));
+  const bar = `${'='.repeat(filled)}${' '.repeat(width - filled)}`;
+  const percent = Math.floor(ratio * 100)
+    .toString()
+    .padStart(3);
+  const detail =
+    progress.phase === 'capturing' && progress.jobKey !== undefined
+      ? `Capturing ${progress.jobKey}`
+      : progress.phase === 'publishing'
+        ? 'Publishing output'
+        : progress.phase === 'complete'
+          ? 'Complete'
+          : 'Preparing browser';
+  return `[${bar}] ${progress.completed}/${progress.total} ${percent}% ${detail}`;
+}
+
+function createCaptureProgressWriter(io: CliIo): {
+  update: (progress: CaptureProgress) => void;
+  finish: () => void;
+} {
+  let active = false;
+  return {
+    update: (progress) => {
+      const line = formatCaptureProgress(progress);
+      if (io.stderr.isTTY === true) {
+        io.stderr.write(`\r\u001B[2K${line}`);
+        active = true;
+      } else {
+        io.stderr.write(`${line}\n`);
+      }
+    },
+    finish: () => {
+      if (active) io.stderr.write('\n');
+    },
+  };
 }
 
 export function formatHumanReport(report: CommandReport): string {
