@@ -1,6 +1,6 @@
 {
   "name": "@guideshot/renderer",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Deterministic offline annotation renderer for GuideShot scenes.",
   "license": "MIT",
   "keywords": [
