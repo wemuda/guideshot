@@ -262,16 +262,13 @@ export class GuideShotService {
       });
 
       const replacementScope = manifestReplacementScope(plan, options);
-      const existing =
-        replacementScope.mode === 'all'
-          ? undefined
-          : await readExistingManifest(context.outputDir);
+      const existing = await readExistingManifest(context.outputDir);
       const manifest = mergeManifest(
-        existing,
+        replacementScope.mode === 'all' ? undefined : existing,
         composed.map(({ staged }) => staged.manifest),
         replacementScope,
       );
-      await transaction.commit(manifest);
+      await transaction.commit(manifest, existing);
       this.#reportCaptureProgress({
         phase: 'complete',
         completed: composed.length,
@@ -321,16 +318,13 @@ export class GuideShotService {
       await closeRenderer(renderer);
       renderer = undefined;
       const replacementScope = manifestReplacementScope(plan, options);
-      const existing =
-        replacementScope.mode === 'all'
-          ? undefined
-          : await readExistingManifest(context.outputDir);
+      const existing = await readExistingManifest(context.outputDir);
       const manifest = mergeManifest(
-        existing,
+        replacementScope.mode === 'all' ? undefined : existing,
         composed.map(({ staged }) => staged.manifest),
         replacementScope,
       );
-      await transaction.commit(manifest);
+      await transaction.commit(manifest, existing);
       return successReport(
         'compose',
         plan,

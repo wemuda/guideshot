@@ -214,6 +214,7 @@ pnpm exec guideshot verify
 - `verify` checks the public manifest and its referenced assets.
 
 Capture and composition use separate identities. Changing page state, actions, framing, dimensions, or adapter versions invalidates capture. Changing only annotation copy, presentation, alt text, or output settings reuses the scene and recomposes.
+After publishing the new manifest, capture and composition remove assets that were referenced only by the previous manifest while preserving outputs retained by scoped runs.
 
 ## Pilot application
 

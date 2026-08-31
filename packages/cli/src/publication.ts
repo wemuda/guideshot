@@ -56,7 +56,10 @@ export class OutputTransaction {
     this.#assets.push(asset);
   }
 
-  async commit(manifest: PublicManifest): Promise<void> {
+  async commit(
+    manifest: PublicManifest,
+    previousManifest?: PublicManifest,
+  ): Promise<void> {
     this.#assertOpen();
     const manifestFile = path.join(this.#stagingDir, 'manifest.json');
     await writeFile(manifestFile, `${canonicalSerialize(manifest)}\n`, {
@@ -87,6 +90,7 @@ export class OutputTransaction {
 
     // The manifest is the publication pointer and is always renamed last.
     await rename(manifestFile, path.join(this.#outputDir, 'manifest.json'));
+    await removeObsoleteAssets(this.#outputDir, previousManifest, manifest);
     await this.close();
   }
 
@@ -191,4 +195,30 @@ function isMissing(error: unknown): boolean {
 
 function compareStrings(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
+}
+
+async function removeObsoleteAssets(
+  outputDir: string,
+  previousManifest: PublicManifest | undefined,
+  manifest: PublicManifest,
+): Promise<void> {
+  if (previousManifest === undefined) return;
+  const currentAssets = manifestAssetPaths(outputDir, manifest);
+  const previousAssets = manifestAssetPaths(outputDir, previousManifest);
+  for (const file of [...previousAssets].sort(compareStrings)) {
+    if (!currentAssets.has(file)) await rm(file, { force: true });
+  }
+}
+
+function manifestAssetPaths(
+  outputDir: string,
+  manifest: PublicManifest,
+): ReadonlySet<string> {
+  return new Set(
+    manifest.entries.flatMap((entry) =>
+      Object.values(entry.variants).map((variant) =>
+        resolveArtifactPath(outputDir, variant.src),
+      ),
+    ),
+  );
 }

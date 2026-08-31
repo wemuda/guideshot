@@ -12,7 +12,7 @@ import {
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { createGuideShotService } from '../src/service.js';
-import { createFixture, fixtureRecipe, writeRecipe } from './helpers.js';
+import { createFixture, fixtureRecipe, PNG, writeRecipe } from './helpers.js';
 
 const roots: string[] = [];
 
@@ -238,7 +238,12 @@ describe('GuideShotService', () => {
       fetch: fixture.fetch,
     });
 
-    expect((await service.capture()).jobs).toHaveLength(2);
+    const initial = await service.capture();
+    expect(initial.jobs).toHaveLength(2);
+    const removedAsset = initial.jobs.find(
+      (job) => job.variantKey === 'mode=pro',
+    )?.asset?.src;
+    expect(removedAsset).toBeDefined();
     await writeRecipe(fixture.recipeFile, fixtureRecipe());
 
     const captured = await service.capture();
@@ -248,6 +253,41 @@ describe('GuideShotService', () => {
     expect(Object.keys(manifest.entries[0]?.variants ?? {})).toEqual([
       'mode=basic',
     ]);
+    await expect(
+      readFile(path.join(fixture.root, 'public/guideshot', removedAsset ?? '')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('removes a superseded asset after publishing its replacement', async () => {
+    const fixture = await createFixture();
+    roots.push(fixture.root);
+    const service = createGuideShotService({
+      cwd: fixture.root,
+      config: fixture.config,
+      fetch: fixture.fetch,
+    });
+
+    const captured = await service.capture();
+    const previousAsset = captured.jobs[0]?.asset?.src;
+    expect(previousAsset).toMatch(/\.webp$/);
+    await writeRecipe(
+      fixture.recipeFile,
+      fixtureRecipe({ output: { formats: ['png'] } }),
+    );
+
+    const composed = await service.compose();
+    const currentAsset = composed.jobs[0]?.asset?.src;
+
+    expect(composed.ok).toBe(true);
+    expect(currentAsset).toMatch(/\.png$/);
+    await expect(
+      readFile(
+        path.join(fixture.root, 'public/guideshot', previousAsset ?? ''),
+      ),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(
+      readFile(path.join(fixture.root, 'public/guideshot', currentAsset ?? '')),
+    ).resolves.toEqual(Buffer.from(PNG));
   });
 
   it('replaces every variant for tag-selected recipes while retaining other recipes', async () => {
@@ -284,6 +324,7 @@ describe('GuideShotService', () => {
       'mode=basic',
       'mode=pro',
     ]);
+    expect((await service.verify()).ok).toBe(true);
   });
 
   it('preserves unselected variants for explicit dimension filters', async () => {
