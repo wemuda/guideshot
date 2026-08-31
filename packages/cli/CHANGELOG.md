@@ -1,5 +1,11 @@
 # @guideshot/cli
 
+## 0.1.3
+
+### Patch Changes
+
+- 6a82765: Remove superseded generated assets after capture or composition publishes a new manifest.
+
 ## 0.1.2
 
 ### Patch Changes
