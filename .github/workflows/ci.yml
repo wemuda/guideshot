@@ -191,4 +191,4 @@ jobs:
       - name: Start trusted publishing
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run release.yml --ref "$GITHUB_REF_NAME"
+        run: gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
