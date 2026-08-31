@@ -16,27 +16,27 @@ export interface AnnotationTheme {
 const LIGHT_THEME: AnnotationTheme = {
   mode: 'light',
   fontFamily: '"GuideShot Inter", sans-serif',
-  foreground: '#f8fafc',
-  surface: '#172033',
-  surfaceBorder: 'rgba(255,255,255,0.16)',
+  foreground: '#fafafa',
+  surface: '#18181b',
+  surfaceBorder: 'rgba(255,255,255,0.14)',
   accent: '#1748e6',
   accentContrast: '#ffffff',
-  scrim: 'rgba(15,23,42,0.5)',
-  redaction: '#111827',
-  shadow: '0 12px 32px rgba(15,23,42,0.28)',
+  scrim: 'rgba(0,0,0,0.46)',
+  redaction: '#111111',
+  shadow: '0 4px 16px rgba(0,0,0,0.24)',
 };
 
 const DARK_THEME: AnnotationTheme = {
   mode: 'dark',
   fontFamily: '"GuideShot Inter", sans-serif',
-  foreground: '#111827',
-  surface: '#f8fafc',
-  surfaceBorder: 'rgba(15,23,42,0.14)',
+  foreground: '#18181b',
+  surface: '#fafafa',
+  surfaceBorder: 'rgba(0,0,0,0.12)',
   accent: '#6f91ff',
   accentContrast: '#111827',
-  scrim: 'rgba(2,6,23,0.62)',
-  redaction: '#020617',
-  shadow: '0 12px 34px rgba(0,0,0,0.42)',
+  scrim: 'rgba(0,0,0,0.4)',
+  redaction: '#000000',
+  shadow: '0 4px 18px rgba(0,0,0,0.32)',
 };
 
 export function resolveTheme(

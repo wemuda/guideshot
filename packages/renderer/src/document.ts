@@ -209,7 +209,11 @@ export function layoutAnnotations(input: {
         throw new TypeError(
           `Missing placement for annotation "${annotation.id}".`,
         );
-      const points = connectorPoints(placement, target.rect);
+      const connectorTarget =
+        annotation.connectorAnchor === 'edge' && annotation.emphasis
+          ? paddedRect(target.rect, annotation.padding)
+          : target.rect;
+      const points = connectorPoints(placement, connectorTarget);
       arrows.push({
         id: annotation.id,
         start: points.start,
@@ -258,7 +262,7 @@ export function createCompositionHtml(input: CompositionDocumentInput): string {
       return [];
     }
     const target = resolveTarget(scene, annotation.id, annotation.target);
-    return [paddedRect(target.rect, annotation.padding)];
+    return [highlightShape(target, annotation.padding, 8)];
   });
   const outlines = sorted.flatMap((annotation) => {
     if (
@@ -268,21 +272,13 @@ export function createCompositionHtml(input: CompositionDocumentInput): string {
       return [];
     }
     const target = resolveTarget(scene, annotation.id, annotation.target);
-    return [
-      {
-        rect: paddedRect(target.rect, annotation.padding),
-        radius: target.borderRadius ?? 8,
-      },
-    ];
+    return [highlightShape(target, annotation.padding, 8)];
   });
   const redactions = sorted
     .filter((annotation) => annotation.kind === 'redaction')
     .map((annotation) => {
       const target = resolveTarget(scene, annotation.id, annotation.target);
-      return {
-        rect: paddedRect(target.rect, annotation.padding),
-        radius: target.borderRadius ?? 4,
-      };
+      return highlightShape(target, annotation.padding, 4);
     });
 
   const svg = svgOverlay({
@@ -367,7 +363,10 @@ function positionedBox(
 function svgOverlay(input: {
   readonly width: number;
   readonly height: number;
-  readonly spotlights: readonly Rect[];
+  readonly spotlights: readonly {
+    readonly rect: Rect;
+    readonly radius: number;
+  }[];
   readonly outlines: readonly {
     readonly rect: Rect;
     readonly radius: number;
@@ -384,8 +383,8 @@ function svgOverlay(input: {
       ? ''
       : `<mask id="guideshot-spotlight-mask"><rect width="100%" height="100%" fill="white"/>${input.spotlights
           .map(
-            (rect) =>
-              `<rect x="${svgNumber(rect.x)}" y="${svgNumber(rect.y)}" width="${svgNumber(rect.width)}" height="${svgNumber(rect.height)}" rx="8" fill="black"/>`,
+            ({ rect, radius }) =>
+              `<rect x="${svgNumber(rect.x)}" y="${svgNumber(rect.y)}" width="${svgNumber(rect.width)}" height="${svgNumber(rect.height)}" rx="${svgNumber(radius)}" fill="black"/>`,
           )
           .join('')}</mask>`;
   const scrim =
@@ -401,13 +400,13 @@ function svgOverlay(input: {
   const outlines = input.outlines
     .map(
       ({ rect, radius }) =>
-        `<rect data-kind="outline" x="${svgNumber(rect.x)}" y="${svgNumber(rect.y)}" width="${svgNumber(rect.width)}" height="${svgNumber(rect.height)}" rx="${svgNumber(radius)}" fill="none" stroke="${input.theme.accent}" stroke-width="3"/>`,
+        `<rect data-kind="outline" x="${svgNumber(rect.x)}" y="${svgNumber(rect.y)}" width="${svgNumber(rect.width)}" height="${svgNumber(rect.height)}" rx="${svgNumber(radius)}" fill="none" stroke="${input.theme.accent}" stroke-width="2"/>`,
     )
     .join('');
   const arrows = input.arrows
     .map(
       ({ id, start, end }) =>
-        `<path data-annotation-id="${escapeHtml(id)}" d="M ${svgNumber(start.x)} ${svgNumber(start.y)} L ${svgNumber(end.x)} ${svgNumber(end.y)}" fill="none" stroke="${input.theme.accent}" stroke-width="3" stroke-linecap="round" marker-end="url(#guideshot-arrowhead)"/>`,
+        `<path data-annotation-id="${escapeHtml(id)}" d="M ${svgNumber(start.x)} ${svgNumber(start.y)} L ${svgNumber(end.x)} ${svgNumber(end.y)}" fill="none" stroke="${input.theme.accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#guideshot-arrowhead)"/>`,
     )
     .join('');
 
@@ -415,7 +414,7 @@ function svgOverlay(input: {
     `<svg class="overlay" viewBox="0 0 ${svgNumber(input.width)} ${svgNumber(input.height)}" xmlns="http://www.w3.org/2000/svg">` +
     `<defs>` +
     spotlightMask +
-    `<marker id="guideshot-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 Z" fill="${input.theme.accent}"/></marker>` +
+    `<marker id="guideshot-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L7,4 L1,7" fill="none" stroke="${input.theme.accent}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>` +
     `</defs>` +
     scrim +
     redactions +
@@ -428,12 +427,12 @@ function svgOverlay(input: {
 function sharedBoxCss(maxWidth: number): string {
   return (
     `.callout,.label,.marker{font-family:var(--guideshot-font);overflow-wrap:anywhere}` +
-    `.callout{max-width:${cssNumber(maxWidth)}px;padding:11px 14px;border-radius:10px;background:var(--guideshot-surface);` +
-    `border:1px solid var(--guideshot-border);box-shadow:var(--guideshot-shadow);color:var(--guideshot-foreground);font-size:15px;font-weight:650;line-height:1.38}` +
-    `.label{max-width:${cssNumber(maxWidth)}px;padding:7px 10px;border-radius:7px;background:var(--guideshot-surface);` +
-    `border:1px solid var(--guideshot-border);box-shadow:var(--guideshot-shadow);color:var(--guideshot-foreground);font-size:13px;font-weight:600;line-height:1.3}` +
-    `.marker{display:grid!important;place-items:center;width:30px!important;height:30px!important;padding:0;border-radius:999px;` +
-    `background:var(--guideshot-accent);color:var(--guideshot-accent-contrast);font-size:13px;font-weight:750;line-height:1}`
+    `.callout{max-width:${cssNumber(maxWidth)}px;padding:10px 14px;border-radius:10px;background:var(--guideshot-surface);` +
+    `border:1px solid var(--guideshot-border);box-shadow:var(--guideshot-shadow);color:var(--guideshot-foreground);font-size:15px;font-weight:600;line-height:1.4}` +
+    `.label{max-width:${cssNumber(maxWidth)}px;padding:7px 10px;border-radius:8px;background:var(--guideshot-surface);` +
+    `border:1px solid var(--guideshot-border);box-shadow:var(--guideshot-shadow);color:var(--guideshot-foreground);font-size:13px;font-weight:600;line-height:1.35}` +
+    `.marker{display:grid!important;place-items:center;width:28px!important;height:28px!important;padding:0;border-radius:999px;` +
+    `background:var(--guideshot-accent);color:var(--guideshot-accent-contrast);font-size:13px;font-weight:700;line-height:1}`
   );
 }
 
@@ -550,6 +549,19 @@ function paddedRect(rect: Rect, padding: number): Rect {
     y: rect.y - padding,
     width: rect.width + padding * 2,
     height: rect.height + padding * 2,
+  };
+}
+
+function highlightShape(
+  target: { readonly rect: Rect; readonly borderRadius?: number },
+  padding: number,
+  fallbackRadius: number,
+): { readonly rect: Rect; readonly radius: number } {
+  const rect = paddedRect(target.rect, padding);
+  const outerRadius = (target.borderRadius ?? fallbackRadius) + padding;
+  return {
+    rect,
+    radius: Math.min(outerRadius, rect.width / 2, rect.height / 2),
   };
 }
 

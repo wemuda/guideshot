@@ -164,6 +164,70 @@ describe('composition document', () => {
     expect(html).toContain('class="box marker"');
     expect(html).toContain('class="box label"');
     expect(html.match(/marker-end=/g)).toHaveLength(2);
+    expect(html).toContain('markerUnits="userSpaceOnUse"');
+    expect(html).toContain('d="M1,1 L7,4 L1,7"');
+    expect(html).not.toContain('markerUnits="strokeWidth"');
+    expect(html).toContain(
+      'x="174" y="124" width="112" height="52" rx="14" fill="black"',
+    );
+    expect(html).toContain(
+      'data-kind="outline" x="175" y="125" width="110" height="50" rx="13" fill="none" stroke="#6f91ff" stroke-width="2"',
+    );
+    expect(html).toContain('stroke-width="2" stroke-linecap="round"');
+    expect(html).toContain(
+      '.callout{max-width:280px;padding:10px 14px;border-radius:10px',
+    );
+    expect(html).toContain('width:28px!important;height:28px!important');
+  });
+
+  it('terminates edge connectors at the emphasized boundary', () => {
+    const layout = layoutAnnotations({
+      scene,
+      annotations: [callout],
+      measurements: new Map([['callout', { width: 140, height: 44 }]]),
+    });
+
+    expect(layout.arrows).toEqual([
+      {
+        id: 'callout',
+        start: { x: 296, y: 150 },
+        end: { x: 286, y: 150 },
+      },
+    ]);
+  });
+
+  it('clamps pill highlight corners to the padded target shape', () => {
+    const pillScene: CapturedScene = {
+      ...scene,
+      targets: {
+        button: { ...scene.targets.button!, borderRadius: 999 },
+      },
+    };
+    const spotlight: NormalizedAnnotation = {
+      id: 'pill',
+      kind: 'spotlight',
+      target: 'button',
+      padding: 5,
+    };
+    const layout = layoutAnnotations({
+      scene: pillScene,
+      annotations: [spotlight],
+      measurements: new Map(),
+    });
+    const html = createCompositionHtml({
+      scene: pillScene,
+      background: Uint8Array.of(1),
+      annotations: [spotlight],
+      measurements: new Map(),
+      layout,
+      outputSize: { width: 500, height: 320 },
+      theme: resolveTheme('light', undefined),
+      font: Uint8Array.of(2),
+    });
+
+    expect(html).toContain(
+      'x="175" y="125" width="110" height="50" rx="25" fill="black"',
+    );
   });
 
   it.each([
