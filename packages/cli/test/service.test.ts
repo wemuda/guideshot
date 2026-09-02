@@ -393,12 +393,14 @@ describe('GuideShotService', () => {
   });
 
   it('rejects unsanitized capture data without publishing or caching a pointer', async () => {
-    const fixture = await createFixture();
+    const fixture = await createFixture(
+      fixtureRecipe({ matrix: { dimensions: { mode: ['basic', 'pro'] } } }),
+    );
     roots.push(fixture.root);
     fixture.state.returnUnsanitizedScene = true;
     const service = createGuideShotService({
       cwd: fixture.root,
-      config: fixture.config,
+      config: { ...fixture.config, capture: { concurrency: 2 } },
       fetch: fixture.fetch,
     });
 
@@ -406,11 +408,82 @@ describe('GuideShotService', () => {
 
     expect(report.ok).toBe(false);
     expect(report.diagnostics[0]?.code).toBe('PRIVACY_POLICY_FAILED');
+    expect(fixture.state).toMatchObject({
+      captures: 2,
+      activeCaptures: 0,
+      cleanups: 2,
+      driverCloses: 1,
+      rendererCloses: 1,
+    });
     await expect(
       readFile(path.join(fixture.root, 'public/guideshot/manifest.json')),
     ).rejects.toMatchObject({ code: 'ENOENT' });
     const cacheRoot = path.join(fixture.root, '.guideshot/cache/scenes');
     await expect(readdir(cacheRoot)).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('limits parallel capture while preserving deterministic job order', async () => {
+    const fixture = await createFixture(
+      fixtureRecipe({ matrix: { dimensions: { mode: ['basic', 'pro'] } } }),
+    );
+    roots.push(fixture.root);
+    await writeRecipe(
+      path.join(fixture.root, 'other.shot.json'),
+      fixtureRecipe({
+        id: 'other.recipe',
+        matrix: { dimensions: { mode: ['basic', 'pro'] } },
+      }),
+    );
+    fixture.state.captureDelayMs = 20;
+    const config = { ...fixture.config, capture: { concurrency: 4 } };
+    const service = createGuideShotService({
+      cwd: fixture.root,
+      config,
+      fetch: fixture.fetch,
+    });
+
+    const captured = await service.capture({ concurrency: 2 });
+    const plan = await planProject(config, fixture.root);
+
+    expect(captured.ok).toBe(true);
+    expect(fixture.state.maxActiveCaptures).toBe(2);
+    expect(captured.jobs.map((job) => job.key)).toEqual(
+      plan.jobs.map((job) => job.key),
+    );
+  });
+
+  it('serializes jobs that share a scenario concurrency key', async () => {
+    const fixture = await createFixture(
+      fixtureRecipe({ matrix: { dimensions: { mode: ['basic', 'pro'] } } }),
+    );
+    roots.push(fixture.root);
+    await writeRecipe(
+      path.join(fixture.root, 'other.shot.json'),
+      fixtureRecipe({
+        id: 'other.recipe',
+        matrix: { dimensions: { mode: ['basic', 'pro'] } },
+      }),
+    );
+    fixture.state.captureDelayMs = 20;
+    const account = fixture.config.scenarios?.account;
+    if (account === undefined) throw new Error('Missing account scenario.');
+    const service = createGuideShotService({
+      cwd: fixture.root,
+      config: {
+        ...fixture.config,
+        capture: { concurrency: 4 },
+        scenarios: {
+          ...fixture.config.scenarios,
+          account: { ...account, concurrencyKey: 'account-fixture' },
+        },
+      },
+      fetch: fixture.fetch,
+    });
+
+    const captured = await service.capture();
+
+    expect(captured.ok).toBe(true);
+    expect(fixture.state.maxActiveCaptures).toBe(1);
   });
 
   it('detects tampered immutable output assets', async () => {

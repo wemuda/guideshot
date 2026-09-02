@@ -178,6 +178,7 @@ export class GuideShotService {
     const cache = new SceneCache(context.cacheDir);
     const transaction = await OutputTransaction.create(context.outputDir);
     const fetcher = this.#options.fetch ?? globalThis.fetch;
+    const concurrency = captureConcurrency(context.config, options.concurrency);
     let server: ServerHandle | undefined;
     let driver: BrowserRun | undefined;
     let renderer: RendererRun | undefined;
@@ -202,51 +203,46 @@ export class GuideShotService {
           : { signal: this.#options.signal }),
       });
       renderer = await context.config.renderer.open();
+      const activeServer = server;
+      const activeDriver = driver;
+      const activeRenderer = renderer;
 
-      const composed: ComposedJob[] = [];
-      for (const job of plan.jobs) {
-        throwIfAborted(this.#options.signal);
-        this.#reportCaptureProgress({
-          phase: 'capturing',
-          completed: composed.length,
-          total: plan.jobs.length,
-          jobKey: job.key,
-        });
-        const resolved = await resolveJob(job, context.config, {
-          baseUrl: server.baseUrl,
-          fetch: fetcher,
-          ...(this.#options.signal === undefined
-            ? {}
-            : { signal: this.#options.signal }),
-        });
-        try {
-          const captured = await driver.capture({
-            job: resolved.capture,
-            captureKey: job.captureKey,
+      let completed = 0;
+      const composed = await runConcurrent(
+        plan.jobs,
+        concurrency,
+        (job) => scenarioConcurrencyKey(job, context.config),
+        async (job) => {
+          throwIfAborted(this.#options.signal);
+          this.#reportCaptureProgress({
+            phase: 'capturing',
+            completed,
+            total: plan.jobs.length,
+            jobKey: job.key,
           });
-          assertSceneIdentity(captured.scene, job);
-          const cached = await cache.write(captured);
-          const composition = await composeJob(
+          const composition = await captureJob({
             job,
-            resolved.recipe,
-            cached,
-            renderer,
-          );
-          await transaction.stage(composition.staged);
-          composed.push({
-            ...composition,
-            report: { ...composition.report, status: 'captured' },
+            config: context.config,
+            baseUrl: activeServer.baseUrl,
+            fetch: fetcher,
+            cache,
+            transaction,
+            driver: activeDriver,
+            renderer: activeRenderer,
+            ...(this.#options.signal === undefined
+              ? {}
+              : { signal: this.#options.signal }),
           });
-        } finally {
-          await runScenarioCleanup(resolved.cleanup, job);
-        }
-        this.#reportCaptureProgress({
-          phase: 'capturing',
-          completed: composed.length,
-          total: plan.jobs.length,
-          jobKey: job.key,
-        });
-      }
+          completed += 1;
+          this.#reportCaptureProgress({
+            phase: 'capturing',
+            completed,
+            total: plan.jobs.length,
+            jobKey: job.key,
+          });
+          return composition;
+        },
+      );
 
       await closeRenderer(renderer);
       renderer = undefined;
@@ -425,6 +421,130 @@ export function createGuideShotService(
   options: ServiceOptions = {},
 ): GuideShotService {
   return new GuideShotService(options);
+}
+
+interface CaptureJobOptions {
+  readonly job: PlannedJob;
+  readonly config: GuideShotConfig;
+  readonly baseUrl: URL;
+  readonly fetch: typeof globalThis.fetch;
+  readonly cache: SceneCache;
+  readonly transaction: OutputTransaction;
+  readonly driver: BrowserRun;
+  readonly renderer: RendererRun;
+  readonly signal?: AbortSignal;
+}
+
+async function captureJob(options: CaptureJobOptions): Promise<ComposedJob> {
+  const resolved = await resolveJob(options.job, options.config, {
+    baseUrl: options.baseUrl,
+    fetch: options.fetch,
+    ...(options.signal === undefined ? {} : { signal: options.signal }),
+  });
+  try {
+    const captured = await options.driver.capture({
+      job: resolved.capture,
+      captureKey: options.job.captureKey,
+    });
+    assertSceneIdentity(captured.scene, options.job);
+    const cached = await options.cache.write(captured);
+    const composition = await composeJob(
+      options.job,
+      resolved.recipe,
+      cached,
+      options.renderer,
+    );
+    await options.transaction.stage(composition.staged);
+    return {
+      ...composition,
+      report: { ...composition.report, status: 'captured' },
+    };
+  } finally {
+    await runScenarioCleanup(resolved.cleanup, options.job);
+  }
+}
+
+function captureConcurrency(
+  config: GuideShotConfig,
+  override: number | undefined,
+): number {
+  const concurrency = override ?? config.capture?.concurrency ?? 1;
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    throw new GuideShotError(
+      'RECIPE_SCHEMA_INVALID',
+      'Capture concurrency must be a positive integer.',
+    );
+  }
+  return concurrency;
+}
+
+function scenarioConcurrencyKey(
+  job: PlannedJob,
+  config: GuideShotConfig,
+): string | undefined {
+  const scenario = job.recipe.scenario?.use;
+  return scenario === undefined
+    ? undefined
+    : config.scenarios?.[scenario]?.concurrencyKey;
+}
+
+async function runConcurrent<TItem, TResult>(
+  items: readonly TItem[],
+  concurrency: number,
+  keyFor: (item: TItem) => string | undefined,
+  run: (item: TItem) => Promise<TResult>,
+): Promise<TResult[]> {
+  const results = new Array<TResult>(items.length);
+  const pending = items.map((_, index) => index);
+  const activeKeys = new Set<string>();
+  let active = 0;
+  let failed = false;
+  let failure: unknown;
+
+  await new Promise<void>((resolve) => {
+    const schedule = (): void => {
+      if (failed) {
+        if (active === 0) resolve();
+        return;
+      }
+      while (active < concurrency && pending.length > 0) {
+        const pendingIndex = pending.findIndex((index) => {
+          const item = items[index];
+          if (item === undefined) return false;
+          const key = keyFor(item);
+          return key === undefined || !activeKeys.has(key);
+        });
+        if (pendingIndex === -1) return;
+        const index = pending.splice(pendingIndex, 1)[0];
+        const item = index === undefined ? undefined : items[index];
+        if (index === undefined || item === undefined) continue;
+        const key = keyFor(item);
+        active += 1;
+        if (key !== undefined) activeKeys.add(key);
+        void run(item)
+          .then((result) => {
+            results[index] = result;
+          })
+          .catch((error: unknown) => {
+            if (!failed) {
+              failed = true;
+              failure = error;
+            }
+          })
+          .finally(() => {
+            active -= 1;
+            if (key !== undefined) activeKeys.delete(key);
+            if (active === 0 && (failed || pending.length === 0)) resolve();
+            else schedule();
+          });
+      }
+      if (active === 0 && pending.length === 0) resolve();
+    };
+    schedule();
+  });
+
+  if (failed) throw failure;
+  return results;
 }
 
 async function composeJob(

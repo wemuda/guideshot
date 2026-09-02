@@ -102,6 +102,7 @@ export default defineConfig({
   recipes: ['shots/**/*.shot.json'],
   outputDir: 'generated/guideshot',
   cacheDir: '.guideshot/cache',
+  capture: { concurrency: 4 },
   server: {
     command: 'pnpm --filter @guideshot/site dev',
     url: 'http://localhost:3000',
@@ -202,6 +203,7 @@ pnpm exec guideshot validate
 pnpm exec guideshot schema
 pnpm exec guideshot plan
 pnpm exec guideshot capture
+pnpm exec guideshot capture --concurrency 8
 pnpm exec guideshot compose
 pnpm exec guideshot verify
 ```
@@ -209,12 +211,13 @@ pnpm exec guideshot verify
 - `validate` loads the config and validates recipes, adapter references, and output identities without opening Chromium.
 - `schema` writes the portable recipe and public-manifest schemas for editor and tooling integration.
 - `plan` prints the expanded jobs and deterministic cache keys without preparing scenarios.
-- `capture` starts or attaches to the configured server, creates a fresh browser context per job, captures clean scenes, composes assets, and publishes the manifest.
+- `capture` starts or attaches to the configured server, runs the configured number of jobs concurrently in isolated browser contexts, composes assets, and publishes the manifest in deterministic order. `--concurrency` overrides the project setting for one run.
 - `compose` renders from valid cached scenes without reopening the application.
 - `verify` checks the public manifest and its referenced assets.
 
 Capture and composition use separate identities. Changing page state, actions, framing, dimensions, or adapter versions invalidates capture. Changing only annotation copy, presentation, alt text, or output settings reuses the scene and recomposes.
 After publishing the new manifest, capture and composition remove assets that were referenced only by the previous manifest while preserving outputs retained by scoped runs.
+Scenarios that mutate shared fixture state can declare the same `concurrencyKey`; GuideShot will serialize those jobs while continuing to run independent jobs in parallel.
 
 ## Pilot application
 
@@ -266,7 +269,7 @@ Package-level work can use `pnpm --filter @guideshot/core test` or the correspon
 
 ## Deliberate deferrals
 
-Phase 2 and later will address the Vite virtual manifest and HMR adapter, optional React consumer, authoring inspector and comparison gallery, compound project schemas, source-set staleness, changed-file planning, registered custom actions, advanced privacy policies, traces and richer reports, concurrency controls, artifact stores, migrations, pinned CI images, and additional browser drivers. Package publication and standalone site deployment are already implemented.
+Phase 2 and later will address the Vite virtual manifest and HMR adapter, optional React consumer, authoring inspector and comparison gallery, compound project schemas, source-set staleness, changed-file planning, registered custom actions, advanced privacy policies, traces and richer reports, artifact stores, migrations, pinned CI images, and additional browser drivers. Package publication and standalone site deployment are already implemented.
 
 Ordinary frontend builds will consume previously generated assets. They will not implicitly launch a browser, authenticate, seed data, or capture screenshots.
 

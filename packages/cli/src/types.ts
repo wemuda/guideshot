@@ -16,6 +16,7 @@ export interface CommandSelection {
 
 export interface CommandOptions extends CommandSelection {
   readonly configFile?: string;
+  readonly concurrency?: number;
   /** Raw `name=value` filters accepted by the CLI entry point. */
   readonly dimensionArguments?: readonly string[];
 }

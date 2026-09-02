@@ -5,6 +5,7 @@ import type { CommandName } from './types.js';
 export interface ParsedCliArgs {
   readonly command?: CommandName;
   readonly configFile?: string;
+  readonly concurrency?: number;
   readonly ids: readonly string[];
   readonly tags: readonly string[];
   readonly dimensions: readonly string[];
@@ -29,6 +30,7 @@ export function parseCliArgs(argv: readonly string[]): ParsedCliArgs {
     strict: true,
     options: {
       config: { type: 'string', short: 'c' },
+      concurrency: { type: 'string' },
       id: { type: 'string', multiple: true },
       tag: { type: 'string', multiple: true },
       dimension: { type: 'string', multiple: true, short: 'd' },
@@ -45,11 +47,13 @@ export function parseCliArgs(argv: readonly string[]): ParsedCliArgs {
     throw new TypeError(`Unknown GuideShot command "${positional}".`);
   }
   const command = positional as CommandName | undefined;
+  const concurrency = parseConcurrency(parsed.values.concurrency);
   return {
     ...(command === undefined ? {} : { command }),
     ...(parsed.values.config === undefined
       ? {}
       : { configFile: parsed.values.config }),
+    ...(concurrency === undefined ? {} : { concurrency }),
     ids: parsed.values.id ?? [],
     tags: parsed.values.tag ?? [],
     dimensions: parsed.values.dimension ?? [],
@@ -71,6 +75,7 @@ Commands:
 
 Options:
   -c, --config <file>          GuideShot config file
+      --concurrency <workers>  Override capture worker count
       --id <recipe-id>         Select a recipe; repeatable
       --tag <tag>              Require a tag; repeatable
   -d, --dimension <name=value> Filter a dimension; repeatable
@@ -78,3 +83,12 @@ Options:
   -h, --help                   Show this help
   -v, --version                Show the CLI version
 `;
+
+function parseConcurrency(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const concurrency = Number(value);
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    throw new TypeError('Capture concurrency must be a positive integer.');
+  }
+  return concurrency;
+}

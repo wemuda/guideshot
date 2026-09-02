@@ -1212,7 +1212,7 @@ The package family, Changesets-based npm release workflow, and standalone Next.j
 - Traces and structured diagnostics.
 - Privacy classification and redaction policies.
 - Artifact-store interface.
-- Atomic publication and concurrency controls.
+- Atomic publication hardening.
 - Magnifier and advanced annotation placement.
 
 ### Phase 4: Extraction and ecosystem

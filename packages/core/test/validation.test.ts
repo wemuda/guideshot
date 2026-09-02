@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   GuideShotError,
   parseRecipe,
+  validateConfig,
   validateRecipe,
   validateRecipeSemantics,
 } from '../src/index.js';
@@ -102,6 +103,27 @@ describe('recipe validation', () => {
           recipe: recipe({ scenario: { use: 'demo:auth', with: {} } }),
         },
         configured,
+      ),
+    ).toThrowError(expect.objectContaining({ code: 'RECIPE_SCHEMA_INVALID' }));
+  });
+
+  it('validates capture concurrency and scenario concurrency keys', () => {
+    expect(() =>
+      validateConfig(config({ capture: { concurrency: 0 } })),
+    ).toThrowError(expect.objectContaining({ code: 'RECIPE_SCHEMA_INVALID' }));
+    expect(() =>
+      validateConfig(
+        config({
+          scenarios: {
+            account: {
+              name: 'test:account',
+              version: '1',
+              schema: { type: 'object' },
+              concurrencyKey: ' ',
+              prepare: () => ({}),
+            },
+          },
+        }),
       ),
     ).toThrowError(expect.objectContaining({ code: 'RECIPE_SCHEMA_INVALID' }));
   });
