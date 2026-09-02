@@ -38,6 +38,7 @@ export type {
   BrowserEnvironment,
   BrowserRun,
   BrowserStatePatch,
+  CaptureConfig,
   CaptureIntent,
   CaptureProfile,
   CaptureRequest,

@@ -91,6 +91,7 @@ export interface ScenarioDefinition<
 > extends ExtensionInfo {
   schema: object;
   datasetRevision?: string;
+  concurrencyKey?: string;
   prepare(
     context: ScenarioContext,
     input: TInput,
@@ -120,11 +121,16 @@ export interface SafetyConfig {
   allowedOrigins?: readonly string[];
 }
 
+export interface CaptureConfig {
+  concurrency?: number;
+}
+
 export interface GuideShotConfig {
   recipes: readonly string[];
   outputDir: string;
   cacheDir: string;
   server: ServerConfig;
+  capture?: CaptureConfig;
   safety?: SafetyConfig;
   targetAttribute?: `data-${string}`;
   profiles: Readonly<Record<string, CaptureProfile>>;

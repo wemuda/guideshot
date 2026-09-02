@@ -154,6 +154,7 @@ export default defineConfig({
   recipes: ['shots/**/*.shot.json'],
   outputDir: 'public/generated/guideshot',
   cacheDir: '.guideshot/cache',
+  capture: { concurrency: 8 },
   server: {
     url: PILOT_ORIGIN,
     command: 'pnpm dev --port 3100',

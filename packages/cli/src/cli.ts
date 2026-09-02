@@ -1,5 +1,6 @@
 import { canonicalSerialize, diagnosticFromUnknown } from '@guideshot/core';
 
+import packageJson from '../package.json' with { type: 'json' };
 import { CLI_USAGE, parseCliArgs } from './args.js';
 import { createGuideShotService, type GuideShotService } from './service.js';
 import type {
@@ -10,7 +11,7 @@ import type {
   ServiceOptions,
 } from './types.js';
 
-export const CLI_VERSION = '0.1.0';
+export const CLI_VERSION = packageJson.version;
 
 export interface RunCliOptions {
   readonly cwd?: string;
@@ -60,6 +61,9 @@ export async function runCli(
       ...(parsed.configFile === undefined
         ? {}
         : { configFile: parsed.configFile }),
+      ...(parsed.concurrency === undefined
+        ? {}
+        : { concurrency: parsed.concurrency }),
       ...(parsed.ids.length === 0 ? {} : { ids: parsed.ids }),
       ...(parsed.tags.length === 0 ? {} : { tags: parsed.tags }),
       ...(parsed.dimensions.length === 0

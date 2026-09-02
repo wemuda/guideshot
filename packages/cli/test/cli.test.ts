@@ -1,9 +1,9 @@
-import { rm } from 'node:fs/promises';
+import { readFile, rm } from 'node:fs/promises';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { parseCliArgs } from '../src/args.js';
-import { formatCaptureProgress, runCli } from '../src/cli.js';
+import { CLI_VERSION, formatCaptureProgress, runCli } from '../src/cli.js';
 import { createGuideShotService } from '../src/service.js';
 import type { CliIo } from '../src/types.js';
 import { createFixture } from './helpers.js';
@@ -17,6 +17,13 @@ afterEach(async () => {
 });
 
 describe('CLI', () => {
+  it('reports the package version', async () => {
+    const packageJson = JSON.parse(
+      await readFile(new URL('../package.json', import.meta.url), 'utf8'),
+    ) as { version: string };
+    expect(CLI_VERSION).toBe(packageJson.version);
+  });
+
   it('formats capture progress with the completed job count and active job', () => {
     expect(
       formatCaptureProgress({
@@ -41,6 +48,7 @@ describe('CLI', () => {
         'docs',
         '-d',
         'mode=basic',
+        '--concurrency=3',
         '--json',
       ]),
     ).toMatchObject({
@@ -48,8 +56,15 @@ describe('CLI', () => {
       ids: ['a', 'b'],
       tags: ['docs'],
       dimensions: ['mode=basic'],
+      concurrency: 3,
       json: true,
     });
+  });
+
+  it('rejects invalid capture concurrency', () => {
+    expect(() => parseCliArgs(['capture', '--concurrency=0'])).toThrow(
+      'Capture concurrency must be a positive integer.',
+    );
   });
 
   it('emits a versioned, stable JSON report', async () => {

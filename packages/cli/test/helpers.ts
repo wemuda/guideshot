@@ -33,6 +33,9 @@ export interface FakeState {
   dimensionResolves: number;
   driverOpens: number;
   captures: number;
+  activeCaptures: number;
+  maxActiveCaptures: number;
+  captureDelayMs: number;
   driverCloses: number;
   rendererOpens: number;
   renders: number;
@@ -65,6 +68,9 @@ export async function createFixture(
     dimensionResolves: 0,
     driverOpens: 0,
     captures: 0,
+    activeCaptures: 0,
+    maxActiveCaptures: 0,
+    captureDelayMs: 0,
     driverCloses: 0,
     rendererOpens: 0,
     renders: 0,
@@ -180,8 +186,18 @@ function fakeDriver(state: FakeState): BrowserDriver {
         return Promise.reject(new Error('Driver must not open.'));
       }
       return Promise.resolve({
-        capture(request): Promise<CaptureResult> {
+        async capture(request): Promise<CaptureResult> {
           state.captures += 1;
+          state.activeCaptures += 1;
+          state.maxActiveCaptures = Math.max(
+            state.maxActiveCaptures,
+            state.activeCaptures,
+          );
+          if (state.captureDelayMs > 0) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, state.captureDelayMs),
+            );
+          }
           const scene = {
             version: 1 as const,
             captureKey: request.captureKey,
@@ -224,16 +240,20 @@ function fakeDriver(state: FakeState): BrowserDriver {
             sanitized: true as const,
             rawHtml: '<input value="private DOM snapshot">',
           };
-          if (state.returnUnsanitizedScene) {
-            return Promise.resolve({
-              scene: {
-                ...scene,
-                sanitized: false,
-              } as unknown as CaptureResult['scene'],
-              background: PNG,
-            });
+          try {
+            if (state.returnUnsanitizedScene) {
+              return {
+                scene: {
+                  ...scene,
+                  sanitized: false,
+                } as unknown as CaptureResult['scene'],
+                background: PNG,
+              };
+            }
+            return { scene, background: PNG };
+          } finally {
+            state.activeCaptures -= 1;
           }
-          return Promise.resolve({ scene, background: PNG });
         },
         close() {
           state.driverCloses += 1;

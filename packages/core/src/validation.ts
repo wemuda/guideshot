@@ -111,6 +111,27 @@ export function validateConfig(config: GuideShotConfig): void {
       'Configuration must register at least one capture profile.',
     );
   }
+  if (
+    config.capture?.concurrency !== undefined &&
+    (!Number.isInteger(config.capture.concurrency) ||
+      config.capture.concurrency < 1)
+  ) {
+    throw new GuideShotError(
+      'RECIPE_SCHEMA_INVALID',
+      'Capture concurrency must be a positive integer.',
+    );
+  }
+  for (const scenario of Object.values(config.scenarios ?? {})) {
+    if (
+      scenario.concurrencyKey !== undefined &&
+      scenario.concurrencyKey.trim() === ''
+    ) {
+      throw new GuideShotError(
+        'RECIPE_SCHEMA_INVALID',
+        'Scenario concurrency keys cannot be empty.',
+      );
+    }
+  }
   for (const [name, profile] of Object.entries(config.profiles)) {
     if (
       !Number.isInteger(profile.viewport.width) ||
