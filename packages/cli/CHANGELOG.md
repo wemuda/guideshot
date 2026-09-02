@@ -1,5 +1,16 @@
 # @guideshot/cli
 
+## 0.2.0
+
+### Minor Changes
+
+- 57830f8: Add bounded concurrent capture with configurable workers and exclusive scenario keys. Report the CLI version from package metadata so releases cannot drift from `guideshot --version`.
+
+### Patch Changes
+
+- Updated dependencies [57830f8]
+  - @guideshot/core@0.2.0
+
 ## 0.1.3
 
 ### Patch Changes

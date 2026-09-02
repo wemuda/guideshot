@@ -1,5 +1,12 @@
 # @guideshot/renderer
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [57830f8]
+  - @guideshot/core@0.2.0
+
 ## 0.1.2
 
 ### Patch Changes
