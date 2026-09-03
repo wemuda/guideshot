@@ -6,6 +6,7 @@ import path from 'node:path';
 import type {
   AnnotationRenderer,
   BrowserDriver,
+  BrowserRun,
   CaptureResult,
   CompositionRequest,
   GuideShotConfig,
@@ -33,6 +34,8 @@ export interface FakeState {
   dimensionResolves: number;
   driverOpens: number;
   captures: number;
+  captureBatches: number;
+  captureBatchSizes: number[];
   activeCaptures: number;
   maxActiveCaptures: number;
   captureDelayMs: number;
@@ -68,6 +71,8 @@ export async function createFixture(
     dimensionResolves: 0,
     driverOpens: 0,
     captures: 0,
+    captureBatches: 0,
+    captureBatchSizes: [],
     activeCaptures: 0,
     maxActiveCaptures: 0,
     captureDelayMs: 0,
@@ -185,7 +190,7 @@ function fakeDriver(state: FakeState): BrowserDriver {
       if (!state.driverEnabled) {
         return Promise.reject(new Error('Driver must not open.'));
       }
-      return Promise.resolve({
+      const run: BrowserRun = {
         async capture(request): Promise<CaptureResult> {
           state.captures += 1;
           state.activeCaptures += 1;
@@ -255,11 +260,19 @@ function fakeDriver(state: FakeState): BrowserDriver {
             state.activeCaptures -= 1;
           }
         },
+        async captureMany(requests) {
+          state.captureBatches += 1;
+          state.captureBatchSizes.push(requests.length);
+          return Promise.all(
+            requests.map(async (request) => run.capture(request)),
+          );
+        },
         close() {
           state.driverCloses += 1;
           return Promise.resolve();
         },
-      });
+      };
+      return Promise.resolve(run);
     },
   };
 }

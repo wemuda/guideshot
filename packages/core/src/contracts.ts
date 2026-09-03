@@ -92,6 +92,7 @@ export interface ScenarioDefinition<
   schema: object;
   datasetRevision?: string;
   concurrencyKey?: string;
+  reusePreparedState?: boolean;
   prepare(
     context: ScenarioContext,
     input: TInput,
@@ -181,6 +182,9 @@ export interface BrowserDriver extends ExtensionInfo {
 
 export interface BrowserRun {
   capture(request: CaptureRequest): Promise<CaptureResult>;
+  captureMany?(
+    requests: readonly CaptureRequest[],
+  ): Promise<readonly CaptureResult[]>;
   close(): Promise<void>;
 }
 

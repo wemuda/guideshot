@@ -227,6 +227,29 @@ describe('GuideShotService', () => {
     expect(publicText).not.toContain('environment');
   });
 
+  it('recaptures pages but reuses byte-identical compositions without opening the renderer', async () => {
+    const fixture = await createFixture();
+    roots.push(fixture.root);
+    const service = createGuideShotService({
+      cwd: fixture.root,
+      config: fixture.config,
+      fetch: fixture.fetch,
+    });
+
+    expect((await service.capture()).ok).toBe(true);
+    fixture.state.rendererEnabled = false;
+    const repeated = await service.capture();
+
+    expect(repeated.ok).toBe(true);
+    expect(fixture.state).toMatchObject({
+      driverOpens: 2,
+      captures: 2,
+      rendererOpens: 1,
+      renders: 1,
+      rendererCloses: 1,
+    });
+  });
+
   it('replaces the full manifest when an unfiltered matrix shrinks', async () => {
     const fixture = await createFixture(
       fixtureRecipe({ matrix: { dimensions: { mode: ['basic', 'pro'] } } }),
@@ -378,6 +401,19 @@ describe('GuideShotService', () => {
       'public/guideshot/manifest.json',
     );
     const before = await readFile(manifestFile);
+    await writeRecipe(
+      fixture.recipeFile,
+      fixtureRecipe({
+        annotations: [
+          {
+            id: 'balance-note',
+            kind: 'callout',
+            target: 'balance',
+            content: 'Force a fresh composition',
+          },
+        ],
+      }),
+    );
     fixture.state.rendererEnabled = false;
 
     const failed = await service.compose();
@@ -413,7 +449,7 @@ describe('GuideShotService', () => {
       activeCaptures: 0,
       cleanups: 2,
       driverCloses: 1,
-      rendererCloses: 1,
+      rendererCloses: 0,
     });
     await expect(
       readFile(path.join(fixture.root, 'public/guideshot/manifest.json')),
@@ -447,9 +483,123 @@ describe('GuideShotService', () => {
 
     expect(captured.ok).toBe(true);
     expect(fixture.state.maxActiveCaptures).toBe(2);
+    expect(fixture.state.captureBatches).toBe(0);
     expect(captured.jobs.map((job) => job.key)).toEqual(
       plan.jobs.map((job) => job.key),
     );
+  });
+
+  it('batches recipes that share an isolated prepared browser state', async () => {
+    const sharedStateRecipe = fixtureRecipe({
+      annotations: [
+        {
+          id: 'balance-note',
+          kind: 'callout',
+          target: 'balance',
+          content: 'Account balance',
+        },
+      ],
+      accessibility: { alt: 'Account balance' },
+    });
+    delete sharedStateRecipe.scenario;
+    const fixture = await createFixture(sharedStateRecipe);
+    roots.push(fixture.root);
+    await writeRecipe(path.join(fixture.root, 'other.shot.json'), {
+      ...sharedStateRecipe,
+      id: 'other.recipe',
+    });
+    const config = { ...fixture.config, capture: { concurrency: 8 } };
+    const service = createGuideShotService({
+      cwd: fixture.root,
+      config,
+      fetch: fixture.fetch,
+    });
+
+    const captured = await service.capture();
+    const plan = await planProject(config, fixture.root);
+
+    expect(captured.diagnostics).toEqual([]);
+    expect(captured.ok).toBe(true);
+    expect(fixture.state.captureBatches).toBe(1);
+    expect(fixture.state.captureBatchSizes).toEqual([2]);
+    expect(fixture.state.captures).toBe(2);
+    expect(captured.jobs.map((job) => job.key)).toEqual(
+      plan.jobs.map((job) => job.key),
+    );
+  });
+
+  it('batches scenario recipes only when prepared-state reuse is explicit', async () => {
+    const fixture = await createFixture();
+    roots.push(fixture.root);
+    await writeRecipe(
+      path.join(fixture.root, 'other.shot.json'),
+      fixtureRecipe({ id: 'other.recipe' }),
+    );
+    const account = fixture.config.scenarios?.account;
+    if (account === undefined) throw new Error('Missing account scenario.');
+    const service = createGuideShotService({
+      cwd: fixture.root,
+      config: {
+        ...fixture.config,
+        capture: { concurrency: 8 },
+        scenarios: {
+          ...fixture.config.scenarios,
+          account: { ...account, reusePreparedState: true },
+        },
+      },
+      fetch: fixture.fetch,
+    });
+
+    const captured = await service.capture();
+
+    expect(captured.ok).toBe(true);
+    expect(fixture.state).toMatchObject({
+      captureBatches: 1,
+      captureBatchSizes: [2],
+      scenarioPrepares: 2,
+      cleanups: 2,
+    });
+  });
+
+  it('keeps reusable scenario recipes separate when their resolved browser states differ', async () => {
+    const fixture = await createFixture();
+    roots.push(fixture.root);
+    await writeRecipe(
+      path.join(fixture.root, 'other.shot.json'),
+      fixtureRecipe({ id: 'other.recipe' }),
+    );
+    const account = fixture.config.scenarios?.account;
+    if (account === undefined) throw new Error('Missing account scenario.');
+    const service = createGuideShotService({
+      cwd: fixture.root,
+      config: {
+        ...fixture.config,
+        scenarios: {
+          ...fixture.config.scenarios,
+          account: {
+            ...account,
+            reusePreparedState: true,
+            async prepare(context, input) {
+              const prepared = await account.prepare(context, input);
+              return {
+                ...prepared,
+                browser: {
+                  ...prepared.browser,
+                  locale: context.recipeId === 'other.recipe' ? 'da' : 'en',
+                },
+              };
+            },
+          },
+        },
+      },
+      fetch: fixture.fetch,
+    });
+
+    const captured = await service.capture();
+
+    expect(captured.ok).toBe(true);
+    expect(fixture.state.captureBatches).toBe(0);
+    expect(fixture.state.captures).toBe(2);
   });
 
   it('serializes jobs that share a scenario concurrency key', async () => {
@@ -503,8 +653,11 @@ describe('GuideShotService', () => {
       'tampered',
     );
 
+    const recaptured = await service.capture();
     const verified = await service.verify();
 
+    expect(recaptured.ok).toBe(false);
+    expect(recaptured.diagnostics[0]?.code).toBe('OUTPUT_COLLISION');
     expect(verified.ok).toBe(false);
     expect(verified.diagnostics[0]?.code).toBe('MANIFEST_INVALID');
   });

@@ -13,4 +13,6 @@ import { htmlRenderer } from '@guideshot/renderer';
 const renderer = htmlRenderer();
 ```
 
+Renderer runs reuse network-disabled Chromium pages across compositions while keeping concurrent work in separate browser contexts.
+
 Requires Node.js 20 or newer. Licensed under the MIT License.

@@ -7,6 +7,7 @@ import {
   createJobCompositionHash,
   diagnosticFromUnknown,
   GuideShotError,
+  hashCanonical,
   interpolate,
   planProject,
   PublicManifestSchema,
@@ -18,7 +19,10 @@ import {
   resolvedAnnotations,
   validateConfig,
   validateRecipe,
+  type AnnotationRenderer,
   type BrowserRun,
+  type CaptureRequest,
+  type CaptureResult,
   type CompositionOutput,
   type GuideShotConfig,
   type ManifestAssetInput,
@@ -30,7 +34,7 @@ import {
 } from '@guideshot/core';
 
 import { verifyRenderedAsset } from './assets.js';
-import { SceneCache, type CachedScene } from './cache.js';
+import { CompositionCache, SceneCache, type CachedScene } from './cache.js';
 import { loadGuideShotConfig } from './config.js';
 import {
   jobIdentity,
@@ -63,6 +67,14 @@ interface ComposedJob {
     readonly manifest: ManifestAssetInput;
     readonly bytes: Uint8Array;
   };
+}
+
+interface CaptureTask {
+  readonly jobs: readonly PlannedJob[];
+}
+
+interface ConcurrencyLimiter {
+  <T>(run: () => Promise<T>): Promise<T>;
 }
 
 export class GuideShotService {
@@ -176,6 +188,7 @@ export class GuideShotService {
       total: plan.jobs.length,
     });
     const cache = new SceneCache(context.cacheDir);
+    const compositionCache = new CompositionCache(context.cacheDir);
     const transaction = await OutputTransaction.create(context.outputDir);
     const fetcher = this.#options.fetch ?? globalThis.fetch;
     const concurrency = captureConcurrency(context.config, options.concurrency);
@@ -202,47 +215,71 @@ export class GuideShotService {
           ? {}
           : { signal: this.#options.signal }),
       });
-      renderer = await context.config.renderer.open();
+      renderer = lazyRenderer(context.config.renderer);
       const activeServer = server;
       const activeDriver = driver;
       const activeRenderer = renderer;
+      const compose = concurrencyLimiter(concurrency);
 
       let completed = 0;
-      const composed = await runConcurrent(
-        plan.jobs,
+      const taskResults = await runConcurrent(
+        captureTasks(
+          plan.jobs,
+          activeDriver.captureMany !== undefined,
+          context.config,
+        ),
         concurrency,
-        (job) => scenarioConcurrencyKey(job, context.config),
-        async (job) => {
+        (task) => scenarioConcurrencyKey(task.jobs[0], context.config),
+        async (task) => {
           throwIfAborted(this.#options.signal);
+          const activeJob = task.jobs[0];
           this.#reportCaptureProgress({
             phase: 'capturing',
             completed,
             total: plan.jobs.length,
-            jobKey: job.key,
+            ...(activeJob === undefined ? {} : { jobKey: activeJob.key }),
           });
-          const composition = await captureJob({
-            job,
+          const compositions = await captureTask({
+            task,
             config: context.config,
             baseUrl: activeServer.baseUrl,
             fetch: fetcher,
             cache,
+            compositionCache,
             transaction,
             driver: activeDriver,
             renderer: activeRenderer,
+            compose,
             ...(this.#options.signal === undefined
               ? {}
               : { signal: this.#options.signal }),
           });
-          completed += 1;
+          completed += compositions.length;
           this.#reportCaptureProgress({
             phase: 'capturing',
             completed,
             total: plan.jobs.length,
-            jobKey: job.key,
+            ...(activeJob === undefined ? {} : { jobKey: activeJob.key }),
           });
-          return composition;
+          return compositions;
         },
       );
+      const composedByJob = new Map(
+        taskResults
+          .flat()
+          .map((composition) => [composition.report.key, composition]),
+      );
+      const composed = plan.jobs.map((job) => {
+        const composition = composedByJob.get(job.key);
+        if (composition === undefined) {
+          throw new GuideShotError(
+            'CAPTURE_FAILED',
+            `Capture did not produce a result for "${job.key}".`,
+            { recipeId: job.recipeId, jobKey: job.key },
+          );
+        }
+        return composition;
+      });
 
       await closeRenderer(renderer);
       renderer = undefined;
@@ -295,18 +332,25 @@ export class GuideShotService {
     const plan = await this.#createPlan(context, options);
     requireJobs(plan, 'compose');
     const cache = new SceneCache(context.cacheDir);
+    const compositionCache = new CompositionCache(context.cacheDir);
     const transaction = await OutputTransaction.create(context.outputDir);
     let renderer: RendererRun | undefined;
 
     try {
-      renderer = await context.config.renderer.open();
+      renderer = lazyRenderer(context.config.renderer);
       const composed: ComposedJob[] = [];
       for (const job of plan.jobs) {
         throwIfAborted(this.#options.signal);
         const cached = await cache.read(job.captureKey);
         assertSceneIdentity(cached.scene, job);
         const recipe = await resolveCachedRecipe(job, context.config, cached);
-        const composition = await composeJob(job, recipe, cached, renderer);
+        const composition = await composeJob(
+          job,
+          recipe,
+          cached,
+          renderer,
+          compositionCache,
+        );
         await transaction.stage(composition.staged);
         composed.push(composition);
       }
@@ -423,45 +467,181 @@ export function createGuideShotService(
   return new GuideShotService(options);
 }
 
-interface CaptureJobOptions {
-  readonly job: PlannedJob;
+interface CaptureTaskOptions {
+  readonly task: CaptureTask;
   readonly config: GuideShotConfig;
   readonly baseUrl: URL;
   readonly fetch: typeof globalThis.fetch;
   readonly cache: SceneCache;
+  readonly compositionCache: CompositionCache;
   readonly transaction: OutputTransaction;
   readonly driver: BrowserRun;
   readonly renderer: RendererRun;
+  readonly compose: ConcurrencyLimiter;
   readonly signal?: AbortSignal;
 }
 
-async function captureJob(options: CaptureJobOptions): Promise<ComposedJob> {
-  const resolved = await resolveJob(options.job, options.config, {
-    baseUrl: options.baseUrl,
-    fetch: options.fetch,
-    ...(options.signal === undefined ? {} : { signal: options.signal }),
-  });
+async function captureTask(
+  options: CaptureTaskOptions,
+): Promise<readonly ComposedJob[]> {
+  const resolved: Array<{
+    job: PlannedJob;
+    resolved: Awaited<ReturnType<typeof resolveJob>>;
+  }> = [];
   try {
-    const captured = await options.driver.capture({
-      job: resolved.capture,
-      captureKey: options.job.captureKey,
-    });
-    assertSceneIdentity(captured.scene, options.job);
-    const cached = await options.cache.write(captured);
-    const composition = await composeJob(
-      options.job,
-      resolved.recipe,
-      cached,
-      options.renderer,
+    for (const job of options.task.jobs) {
+      resolved.push({
+        job,
+        resolved: await resolveJob(job, options.config, {
+          baseUrl: options.baseUrl,
+          fetch: options.fetch,
+          ...(options.signal === undefined ? {} : { signal: options.signal }),
+        }),
+      });
+    }
+    const requests: CaptureRequest[] = resolved.map(
+      ({ job, resolved: item }) => ({
+        job: item.capture,
+        captureKey: job.captureKey,
+      }),
     );
-    await options.transaction.stage(composition.staged);
-    return {
-      ...composition,
-      report: { ...composition.report, status: 'captured' },
-    };
+    const captured = new Array<CaptureResult>(requests.length);
+    for (const group of captureRequestGroups(requests)) {
+      const results =
+        group.length > 1 && options.driver.captureMany !== undefined
+          ? await options.driver.captureMany(
+              group.map(({ request }) => request),
+            )
+          : await Promise.all(
+              group.map(async ({ request }) => options.driver.capture(request)),
+            );
+      if (results.length !== group.length) {
+        throw new GuideShotError(
+          'CAPTURE_FAILED',
+          `Driver returned ${results.length} scenes for ${group.length} capture requests.`,
+        );
+      }
+      group.forEach(({ index }, resultIndex) => {
+        const result = results[resultIndex];
+        if (result !== undefined) captured[index] = result;
+      });
+    }
+    return awaitAll(
+      resolved.map(({ job, resolved: item }, index) =>
+        options.compose(async () => {
+          const result = captured[index];
+          if (result === undefined) {
+            throw new GuideShotError(
+              'CAPTURE_FAILED',
+              `Driver returned no scene for "${job.key}".`,
+              { recipeId: job.recipeId, jobKey: job.key },
+            );
+          }
+          assertSceneIdentity(result.scene, job);
+          const cached = await options.cache.write(result);
+          const composition = await composeJob(
+            job,
+            item.recipe,
+            cached,
+            options.renderer,
+            options.compositionCache,
+          );
+          await options.transaction.stage(composition.staged);
+          return {
+            ...composition,
+            report: { ...composition.report, status: 'captured' },
+          };
+        }),
+      ),
+    );
   } finally {
-    await runScenarioCleanup(resolved.cleanup, options.job);
+    for (const { job, resolved: item } of resolved) {
+      await runScenarioCleanup(item.cleanup, job);
+    }
   }
+}
+
+function captureTasks(
+  jobs: readonly PlannedJob[],
+  batchingSupported: boolean,
+  config: GuideShotConfig,
+): CaptureTask[] {
+  if (!batchingSupported) return jobs.map((job) => ({ jobs: [job] }));
+  const tasks: { jobs: PlannedJob[] }[] = [];
+  const grouped = new Map<string, { jobs: PlannedJob[] }>();
+  for (const job of jobs) {
+    const key = capturePreparationKey(job, config);
+    if (key === undefined) {
+      tasks.push({ jobs: [job] });
+      continue;
+    }
+    let task = grouped.get(key);
+    if (task === undefined) {
+      task = { jobs: [] };
+      grouped.set(key, task);
+      tasks.push(task);
+    }
+    task.jobs.push(job);
+  }
+  return tasks;
+}
+
+function capturePreparationKey(
+  job: PlannedJob,
+  config: GuideShotConfig,
+): string | undefined {
+  const scenario = job.recipe.scenario?.use;
+  if (
+    scenario !== undefined &&
+    config.scenarios?.[scenario]?.reusePreparedState !== true
+  ) {
+    return undefined;
+  }
+  const intent = Object.fromEntries(
+    Object.entries(job.captureIntent).filter(
+      ([key]) => key !== 'recipeId' && key !== 'capture',
+    ),
+  );
+  const sourceCapture = job.captureIntent.capture;
+  const capture =
+    sourceCapture === undefined
+      ? undefined
+      : Object.fromEntries(
+          Object.entries(sourceCapture).filter(([key]) => key !== 'frame'),
+        );
+  return hashCanonical({ ...intent, capture });
+}
+
+function captureRequestGroups(
+  requests: readonly CaptureRequest[],
+): Array<Array<{ index: number; request: CaptureRequest }>> {
+  const groups: Array<Array<{ index: number; request: CaptureRequest }>> = [];
+  const byPreparation = new Map<string, (typeof groups)[number]>();
+  requests.forEach((request, index) => {
+    const key = resolvedPreparationKey(request);
+    let group = byPreparation.get(key);
+    if (group === undefined) {
+      group = [];
+      byPreparation.set(key, group);
+      groups.push(group);
+    }
+    group.push({ index, request });
+  });
+  return groups;
+}
+
+function resolvedPreparationKey(request: CaptureRequest): string {
+  const capture = Object.fromEntries(
+    Object.entries(request.job.capture).filter(([key]) => key !== 'frame'),
+  );
+  return hashCanonical({
+    profile: request.job.profile,
+    browser: request.job.browser,
+    page: request.job.page,
+    prepare: request.job.prepare,
+    ready: request.job.ready,
+    capture,
+  });
 }
 
 function captureConcurrency(
@@ -479,9 +659,10 @@ function captureConcurrency(
 }
 
 function scenarioConcurrencyKey(
-  job: PlannedJob,
+  job: PlannedJob | undefined,
   config: GuideShotConfig,
 ): string | undefined {
+  if (job === undefined) return undefined;
   const scenario = job.recipe.scenario?.use;
   return scenario === undefined
     ? undefined
@@ -497,17 +678,17 @@ async function runConcurrent<TItem, TResult>(
   const results = new Array<TResult>(items.length);
   const pending = items.map((_, index) => index);
   const activeKeys = new Set<string>();
-  let active = 0;
+  let activeTasks = 0;
   let failed = false;
   let failure: unknown;
 
   await new Promise<void>((resolve) => {
     const schedule = (): void => {
       if (failed) {
-        if (active === 0) resolve();
+        if (activeTasks === 0) resolve();
         return;
       }
-      while (active < concurrency && pending.length > 0) {
+      while (activeTasks < concurrency && pending.length > 0) {
         const pendingIndex = pending.findIndex((index) => {
           const item = items[index];
           if (item === undefined) return false;
@@ -519,7 +700,7 @@ async function runConcurrent<TItem, TResult>(
         const item = index === undefined ? undefined : items[index];
         if (index === undefined || item === undefined) continue;
         const key = keyFor(item);
-        active += 1;
+        activeTasks += 1;
         if (key !== undefined) activeKeys.add(key);
         void run(item)
           .then((result) => {
@@ -532,13 +713,14 @@ async function runConcurrent<TItem, TResult>(
             }
           })
           .finally(() => {
-            active -= 1;
+            activeTasks -= 1;
             if (key !== undefined) activeKeys.delete(key);
-            if (active === 0 && (failed || pending.length === 0)) resolve();
-            else schedule();
+            if (activeTasks === 0 && (failed || pending.length === 0)) {
+              resolve();
+            } else schedule();
           });
       }
-      if (active === 0 && pending.length === 0) resolve();
+      if (activeTasks === 0 && pending.length === 0) resolve();
     };
     schedule();
   });
@@ -547,31 +729,73 @@ async function runConcurrent<TItem, TResult>(
   return results;
 }
 
+function concurrencyLimiter(concurrency: number): ConcurrencyLimiter {
+  const pending: Array<() => void> = [];
+  let active = 0;
+
+  const schedule = (): void => {
+    while (active < concurrency) {
+      const start = pending.shift();
+      if (start === undefined) return;
+      active += 1;
+      start();
+    }
+  };
+
+  return <T>(run: () => Promise<T>): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+      pending.push(() => {
+        void run()
+          .then(resolve, reject)
+          .finally(() => {
+            active -= 1;
+            schedule();
+          });
+      });
+      schedule();
+    });
+}
+
+async function awaitAll<T>(promises: readonly Promise<T>[]): Promise<T[]> {
+  const settled = await Promise.allSettled(promises);
+  const failed = settled.find(
+    (result): result is PromiseRejectedResult => result.status === 'rejected',
+  );
+  if (failed !== undefined) throw failed.reason;
+  return settled.map((result) => (result as PromiseFulfilledResult<T>).value);
+}
+
 async function composeJob(
   job: PlannedJob,
   recipe: Recipe,
   cached: CachedScene,
   renderer: RendererRun,
+  cache: CompositionCache,
 ): Promise<ComposedJob> {
   const output = compositionOutput(recipe);
   const annotations = resolvedAnnotations(recipe);
   const alt = resolvedAlt(recipe);
   const compositionKey = createJobCompositionHash(job, cached.sceneHash);
-  const rendered = await renderer.render({
-    scene: cached.scene,
-    background: cached.background,
-    annotations,
-    output,
-    ...(cached.scene.theme === undefined ? {} : { theme: cached.scene.theme }),
-  });
-  if (rendered.length !== 1 || rendered[0] === undefined) {
-    throw new GuideShotError(
-      'COMPOSITION_FAILED',
-      `Renderer must return exactly one Phase 1 asset for "${job.key}".`,
-      { recipeId: job.recipeId, jobKey: job.key },
-    );
+  let asset = await cache.read(compositionKey);
+  if (asset === undefined) {
+    const rendered = await renderer.render({
+      scene: cached.scene,
+      background: cached.background,
+      annotations,
+      output,
+      ...(cached.scene.theme === undefined
+        ? {}
+        : { theme: cached.scene.theme }),
+    });
+    if (rendered.length !== 1 || rendered[0] === undefined) {
+      throw new GuideShotError(
+        'COMPOSITION_FAILED',
+        `Renderer must return exactly one Phase 1 asset for "${job.key}".`,
+        { recipeId: job.recipeId, jobKey: job.key },
+      );
+    }
+    asset = await cache.write(compositionKey, verifyRenderedAsset(rendered[0]));
   }
-  const asset = verifyRenderedAsset(rendered[0]);
   if (asset.format !== output.formats[0]) {
     throw new GuideShotError(
       'COMPOSITION_FAILED',
@@ -696,6 +920,24 @@ async function runScenarioCleanup(
 
 async function closeRenderer(renderer?: RendererRun): Promise<void> {
   await renderer?.close();
+}
+
+function lazyRenderer(renderer: AnnotationRenderer): RendererRun {
+  let opened: Promise<RendererRun> | undefined;
+  let closed = false;
+  return {
+    async render(request) {
+      if (closed) throw new Error('Renderer run is closed.');
+      opened ??= renderer.open();
+      return (await opened).render(request);
+    },
+    async close() {
+      if (closed) return;
+      closed = true;
+      const run = await opened?.catch(() => undefined);
+      await run?.close();
+    },
+  };
 }
 
 async function closeDriver(driver?: BrowserRun): Promise<void> {

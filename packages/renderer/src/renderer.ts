@@ -7,6 +7,7 @@ import {
   type LaunchOptions,
   type Page,
 } from 'playwright';
+import packageJson from '../package.json' with { type: 'json' };
 
 import type {
   AnnotationRenderer,
@@ -34,7 +35,7 @@ export interface HtmlRendererOptions {
 }
 
 const RENDERER_NAME = 'guideshot:html';
-const RENDERER_VERSION = '0.1.0';
+const RENDERER_VERSION = packageJson.version;
 
 export function htmlRenderer(
   options: HtmlRendererOptions = {},
@@ -56,7 +57,8 @@ export function htmlRenderer(
 class HtmlRendererRun implements RendererRun {
   readonly #browser: Browser;
   readonly #font: Uint8Array;
-  readonly #contexts = new Set<BrowserContext>();
+  readonly #slots = new Set<RendererSlot>();
+  readonly #idleSlots: RendererSlot[] = [];
   #closed = false;
 
   constructor(browser: Browser, font: Uint8Array) {
@@ -72,24 +74,10 @@ class HtmlRendererRun implements RendererRun {
     const outputSize = resolveOutputSize(request.scene, request.output);
     const theme = resolveTheme(request.theme, request.scene.theme);
     const formats = normalizeFormats(request.output.formats);
-    const context = await this.#browser.newContext({
-      viewport: outputSize,
-      screen: outputSize,
-      deviceScaleFactor: 1,
-      colorScheme: theme.mode,
-      locale: request.scene.locale,
-      timezoneId: 'UTC',
-      reducedMotion: 'reduce',
-      serviceWorkers: 'block',
-    });
-    this.#contexts.add(context);
+    const slot = await this.#acquireSlot(outputSize);
+    const { page } = slot;
 
     try {
-      await context.setOffline(true);
-      await context.route('**/*', async (route) =>
-        route.abort('blockedbyclient'),
-      );
-      const page = await context.newPage();
       const measurements = await measureAnnotations(page, {
         annotations,
         frameWidth: request.scene.frame.width,
@@ -134,8 +122,7 @@ class HtmlRendererRun implements RendererRun {
       }
       return assets;
     } finally {
-      this.#contexts.delete(context);
-      await context.close();
+      this.#releaseSlot(slot);
     }
   }
 
@@ -143,15 +130,73 @@ class HtmlRendererRun implements RendererRun {
     if (this.#closed) return;
     this.#closed = true;
     await Promise.allSettled(
-      [...this.#contexts].map(async (context) => context.close()),
+      [...this.#slots].map(async ({ context }) => context.close()),
     );
-    this.#contexts.clear();
+    this.#slots.clear();
+    this.#idleSlots.length = 0;
     await this.#browser.close();
   }
 
   #assertOpen(): void {
     if (this.#closed) throw new Error('Renderer run is closed.');
   }
+
+  async #acquireSlot(outputSize: {
+    width: number;
+    height: number;
+  }): Promise<RendererSlot> {
+    this.#assertOpen();
+    const existing = this.#idleSlots.pop();
+    const slot = existing ?? (await this.#createSlot(outputSize));
+    try {
+      if (existing !== undefined) await slot.page.setViewportSize(outputSize);
+      return slot;
+    } catch (error) {
+      this.#slots.delete(slot);
+      await slot.context.close().catch(() => undefined);
+      throw error;
+    }
+  }
+
+  async #createSlot(outputSize: {
+    width: number;
+    height: number;
+  }): Promise<RendererSlot> {
+    const context = await this.#browser.newContext({
+      viewport: outputSize,
+      screen: outputSize,
+      deviceScaleFactor: 1,
+      locale: 'en',
+      timezoneId: 'UTC',
+      reducedMotion: 'reduce',
+      serviceWorkers: 'block',
+    });
+    try {
+      await context.setOffline(true);
+      await context.route('**/*', async (route) =>
+        route.abort('blockedbyclient'),
+      );
+      const slot = { context, page: await context.newPage() };
+      this.#slots.add(slot);
+      return slot;
+    } catch (error) {
+      await context.close();
+      throw error;
+    }
+  }
+
+  #releaseSlot(slot: RendererSlot): void {
+    if (this.#closed || slot.page.isClosed()) {
+      this.#slots.delete(slot);
+      return;
+    }
+    this.#idleSlots.push(slot);
+  }
+}
+
+interface RendererSlot {
+  readonly context: BrowserContext;
+  readonly page: Page;
 }
 
 async function measureAnnotations(

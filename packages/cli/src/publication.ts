@@ -25,6 +25,11 @@ export interface StagedAsset {
   readonly bytes: Uint8Array;
 }
 
+interface TransactionAsset {
+  readonly asset: StagedAsset;
+  readonly staged: boolean;
+}
+
 export type ManifestReplacementScope =
   | { readonly mode: 'all' }
   | { readonly mode: 'recipes'; readonly recipeIds: ReadonlySet<string> }
@@ -33,7 +38,7 @@ export type ManifestReplacementScope =
 export class OutputTransaction {
   readonly #outputDir: string;
   readonly #stagingDir: string;
-  readonly #assets: StagedAsset[] = [];
+  readonly #assets: TransactionAsset[] = [];
   #closed = false;
 
   private constructor(outputDir: string, stagingDir: string) {
@@ -50,10 +55,15 @@ export class OutputTransaction {
   async stage(asset: StagedAsset): Promise<void> {
     this.#assertOpen();
     const relative = asset.manifest.src.replace(/^\.\//, '');
+    const published = resolveArtifactPath(this.#outputDir, relative);
+    if (await exists(published)) {
+      this.#assets.push({ asset, staged: false });
+      return;
+    }
     const destination = resolveArtifactPath(this.#stagingDir, relative);
     await mkdir(path.dirname(destination), { recursive: true });
     await writeFile(destination, asset.bytes, { flag: 'wx' });
-    this.#assets.push(asset);
+    this.#assets.push({ asset, staged: true });
   }
 
   async commit(
@@ -67,8 +77,9 @@ export class OutputTransaction {
       flag: 'wx',
     });
 
-    for (const asset of [...this.#assets].sort((left, right) =>
-      compareStrings(left.manifest.src, right.manifest.src),
+    for (const { asset, staged: wasStaged } of [...this.#assets].sort(
+      (left, right) =>
+        compareStrings(left.asset.manifest.src, right.asset.manifest.src),
     )) {
       const relative = asset.manifest.src.replace(/^\.\//, '');
       const staged = resolveArtifactPath(this.#stagingDir, relative);
@@ -82,8 +93,12 @@ export class OutputTransaction {
             `Immutable output asset "${asset.manifest.src}" already exists with different bytes.`,
           );
         }
-        await rm(staged, { force: true });
+        if (wasStaged) await rm(staged, { force: true });
       } else {
+        if (!wasStaged) {
+          await mkdir(path.dirname(staged), { recursive: true });
+          await writeFile(staged, asset.bytes, { flag: 'wx' });
+        }
         await rename(staged, destination);
       }
     }

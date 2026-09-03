@@ -211,13 +211,14 @@ pnpm exec guideshot verify
 - `validate` loads the config and validates recipes, adapter references, and output identities without opening Chromium.
 - `schema` writes the portable recipe and public-manifest schemas for editor and tooling integration.
 - `plan` prints the expanded jobs and deterministic cache keys without preparing scenarios.
-- `capture` starts or attaches to the configured server, runs the configured number of jobs concurrently in isolated browser contexts, composes assets, and publishes the manifest in deterministic order. `--concurrency` overrides the project setting for one run.
+- `capture` starts or attaches to the configured server, runs the configured number of prepared browser states concurrently, composes assets, and publishes the manifest in deterministic order. Compatible recipes that share the same stateless preparation reuse one isolated page and each distinct frame is screenshotted once. `--concurrency` overrides the project setting for one run.
 - `compose` renders from valid cached scenes without reopening the application.
 - `verify` checks the public manifest and its referenced assets.
 
 Capture and composition use separate identities. Changing page state, actions, framing, dimensions, or adapter versions invalidates capture. Changing only annotation copy, presentation, alt text, or output settings reuses the scene and recomposes.
+Every capture still visits and validates the live page. GuideShot skips annotation rendering only when the freshly captured scene hash, composition inputs, and renderer version exactly match a cached composition.
 After publishing the new manifest, capture and composition remove assets that were referenced only by the previous manifest while preserving outputs retained by scoped runs.
-Scenarios that mutate shared fixture state can declare the same `concurrencyKey`; GuideShot will serialize those jobs while continuing to run independent jobs in parallel.
+Scenario-backed recipes retain their own capture lifecycle by default. A deterministic, read-only scenario may set `reusePreparedState: true` to batch compatible recipes after preparing each one; scenarios that mutate shared fixture state can instead declare the same `concurrencyKey` so those jobs serialize while independent jobs continue in parallel.
 
 ## Pilot application
 

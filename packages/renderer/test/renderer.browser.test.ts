@@ -63,6 +63,21 @@ browserDescribe('Chromium renderer', () => {
       expect(Buffer.from(assets[1]!.bytes.slice(0, 4)).toString('ascii')).toBe(
         'RIFF',
       );
+      const repeated = await run.render(request);
+      expect(repeated.map(({ bytes }) => bytes)).toEqual(
+        assets.map(({ bytes }) => bytes),
+      );
+      const concurrent = await Promise.all([
+        run.render(request),
+        run.render(request),
+      ]);
+      expect(
+        concurrent.every((result) =>
+          result.every(({ bytes }, index) =>
+            Buffer.from(bytes).equals(Buffer.from(assets[index]!.bytes)),
+          ),
+        ),
+      ).toBe(true);
     } finally {
       await run.close();
     }

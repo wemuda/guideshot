@@ -126,5 +126,20 @@ describe('recipe validation', () => {
         }),
       ),
     ).toThrowError(expect.objectContaining({ code: 'RECIPE_SCHEMA_INVALID' }));
+    expect(() =>
+      validateConfig(
+        config({
+          scenarios: {
+            account: {
+              name: 'test:account',
+              version: '1',
+              schema: { type: 'object' },
+              reusePreparedState: 'yes' as unknown as boolean,
+              prepare: () => ({}),
+            },
+          },
+        }),
+      ),
+    ).toThrowError(expect.objectContaining({ code: 'RECIPE_SCHEMA_INVALID' }));
   });
 });

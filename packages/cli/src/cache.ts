@@ -17,6 +17,7 @@ import {
   sha256,
   type CaptureResult,
   type CapturedScene,
+  type OutputFormat,
 } from '@guideshot/core';
 import { imageSize } from 'image-size';
 
@@ -29,6 +30,24 @@ export interface CachedScene {
 interface ScenePointer {
   readonly version: 1;
   readonly sceneHash: string;
+}
+
+export interface CachedComposition {
+  readonly format: OutputFormat;
+  readonly mimeType: 'image/png' | 'image/webp';
+  readonly bytes: Uint8Array;
+  readonly width: number;
+  readonly height: number;
+  readonly hash: string;
+}
+
+interface CompositionMetadata {
+  readonly version: 1;
+  readonly format: OutputFormat;
+  readonly mimeType: 'image/png' | 'image/webp';
+  readonly width: number;
+  readonly height: number;
+  readonly hash: string;
 }
 
 export class SceneCache {
@@ -111,6 +130,97 @@ export class SceneCache {
         `Cached scene "${captureKey}" is incomplete or invalid.`,
         { cause },
       );
+    }
+  }
+}
+
+export class CompositionCache {
+  readonly #root: string;
+
+  constructor(cacheDir: string) {
+    this.#root = path.join(cacheDir, 'compositions');
+  }
+
+  async read(compositionKey: string): Promise<CachedComposition | undefined> {
+    assertHash(compositionKey, 'composition key');
+    const cacheDir = path.join(this.#root, compositionKey);
+    try {
+      const metadata = parseCompositionMetadata(
+        await readFile(path.join(cacheDir, 'asset.json'), 'utf8'),
+      );
+      const bytes = Uint8Array.from(
+        await readFile(path.join(cacheDir, `asset.${metadata.format}`)),
+      );
+      return validateComposition({ ...metadata, bytes });
+    } catch (cause) {
+      if (isMissing(cause)) return undefined;
+      if (cause instanceof GuideShotError) throw cause;
+      throw new GuideShotError(
+        'OUTPUT_STALE',
+        `Cached composition "${compositionKey}" is incomplete or invalid.`,
+        { cause },
+      );
+    }
+  }
+
+  async write(
+    compositionKey: string,
+    composition: CachedComposition,
+  ): Promise<CachedComposition> {
+    assertHash(compositionKey, 'composition key');
+    const validated = validateComposition(composition);
+    await mkdir(this.#root, { recursive: true, mode: 0o700 });
+    const cacheDir = path.join(this.#root, compositionKey);
+    const existing = await this.read(compositionKey);
+    if (existing !== undefined) {
+      if (existing.hash !== validated.hash) {
+        throw new GuideShotError(
+          'OUTPUT_COLLISION',
+          `Composition cache key "${compositionKey}" produced different bytes.`,
+        );
+      }
+      return existing;
+    }
+
+    const staging = await mkdtemp(path.join(this.#root, '.composition-'));
+    try {
+      const metadata: CompositionMetadata = {
+        version: 1,
+        format: validated.format,
+        mimeType: validated.mimeType,
+        width: validated.width,
+        height: validated.height,
+        hash: validated.hash,
+      };
+      await Promise.all([
+        writeFile(
+          path.join(staging, `asset.${validated.format}`),
+          validated.bytes,
+          { mode: 0o600 },
+        ),
+        writeFile(
+          path.join(staging, 'asset.json'),
+          `${canonicalSerialize(metadata)}\n`,
+          { encoding: 'utf8', mode: 0o600 },
+        ),
+      ]);
+      try {
+        await rename(staging, cacheDir);
+      } catch (cause) {
+        const concurrent = await this.read(compositionKey);
+        if (concurrent === undefined) throw cause;
+        if (concurrent.hash !== validated.hash) {
+          throw new GuideShotError(
+            'OUTPUT_COLLISION',
+            `Composition cache key "${compositionKey}" produced different bytes.`,
+            { cause },
+          );
+        }
+        return concurrent;
+      }
+      return validated;
+    } finally {
+      await rm(staging, { recursive: true, force: true });
     }
   }
 }
@@ -268,6 +378,64 @@ function parseScene(source: string): CapturedScene {
   return value as CapturedScene;
 }
 
+function parseCompositionMetadata(source: string): CompositionMetadata {
+  const value = JSON.parse(source) as unknown;
+  if (
+    value === null ||
+    typeof value !== 'object' ||
+    (value as { version?: unknown }).version !== 1 ||
+    ((value as { format?: unknown }).format !== 'png' &&
+      (value as { format?: unknown }).format !== 'webp') ||
+    typeof (value as { width?: unknown }).width !== 'number' ||
+    typeof (value as { height?: unknown }).height !== 'number' ||
+    typeof (value as { hash?: unknown }).hash !== 'string'
+  ) {
+    throw new GuideShotError(
+      'OUTPUT_STALE',
+      'Cached composition metadata is invalid.',
+    );
+  }
+  const metadata = value as CompositionMetadata;
+  if (
+    metadata.mimeType !==
+    (metadata.format === 'png' ? 'image/png' : 'image/webp')
+  ) {
+    throw new GuideShotError(
+      'OUTPUT_STALE',
+      'Cached composition MIME type is invalid.',
+    );
+  }
+  assertHash(metadata.hash, 'composition asset hash');
+  return metadata;
+}
+
+function validateComposition(
+  composition: CachedComposition,
+): CachedComposition {
+  const dimensions = imageSize(composition.bytes);
+  const mimeType = composition.format === 'png' ? 'image/png' : 'image/webp';
+  if (
+    dimensions.type !== composition.format ||
+    dimensions.width !== composition.width ||
+    dimensions.height !== composition.height ||
+    composition.mimeType !== mimeType ||
+    sha256(composition.bytes) !== composition.hash
+  ) {
+    throw new GuideShotError(
+      'OUTPUT_STALE',
+      'Cached composition asset is invalid.',
+    );
+  }
+  return {
+    format: composition.format,
+    mimeType: composition.mimeType,
+    bytes: Uint8Array.from(composition.bytes),
+    width: composition.width,
+    height: composition.height,
+    hash: composition.hash,
+  };
+}
+
 async function writeAtomicJson(file: string, value: unknown): Promise<void> {
   const temporary = path.join(
     path.dirname(file),
@@ -292,6 +460,15 @@ async function exists(file: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+function isMissing(error: unknown): boolean {
+  return (
+    error !== null &&
+    typeof error === 'object' &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 'ENOENT'
+  );
 }
 
 function assertHash(value: string, label: string): void {
