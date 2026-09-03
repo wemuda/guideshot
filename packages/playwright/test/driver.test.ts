@@ -5,6 +5,7 @@ import { createServer, type Server } from 'node:http';
 import type { CaptureRequest, ResolvedCaptureJob } from '@guideshot/core';
 import { chromium } from 'playwright';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import packageJson from '../package.json' with { type: 'json' };
 
 import { playwrightDriver } from '../src/index.js';
 
@@ -13,9 +14,11 @@ const browserAvailable = existsSync(chromium.executablePath());
 describe.runIf(browserAvailable)('playwrightDriver', () => {
   let fixture: Server;
   let baseUrl: URL;
+  let documentRequests = 0;
 
   beforeAll(async () => {
     fixture = createServer((request, response) => {
+      documentRequests += 1;
       response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       response.end(
         fixtureHtml(request.url ?? '/', request.headers['x-fixture']),
@@ -47,11 +50,11 @@ describe.runIf(browserAvailable)('playwrightDriver', () => {
     });
     expect(driver).toMatchObject({
       name: '@guideshot/playwright',
-      version: '0.1.0',
+      version: packageJson.version,
     });
     expect(await driver.describeEnvironment()).toMatchObject({
       driver: '@guideshot/playwright',
-      driverVersion: '0.1.0',
+      driverVersion: packageJson.version,
       browser: 'chromium',
     });
     const run = await driver.open({
@@ -145,6 +148,52 @@ describe.runIf(browserAvailable)('playwrightDriver', () => {
         Math.floor(((privateTarget?.rect.y ?? 0) + 4) * 2),
       );
       expect(pixel).toEqual([0, 0, 0, 255]);
+    } finally {
+      await run.close();
+    }
+  }, 20_000);
+
+  it('captures compatible recipes from one isolated prepared page', async () => {
+    documentRequests = 0;
+    const run = await playwrightDriver({
+      timeoutMs: 3_000,
+      navigationTimeoutMs: 5_000,
+      stabilityIntervalMs: 20,
+    }).open({
+      baseUrl,
+      targetAttribute: 'data-guide-target',
+    });
+    const first = {
+      ...captureRequest({
+        key: 'first.default',
+        recipeId: 'first',
+        ready: [{ expect: 'count', target: 'list.item', count: 2 }],
+        capture: { frame: { target: 'panel', padding: 10 } },
+      }),
+      captureKey: 'first-key',
+    };
+    const second = {
+      ...captureRequest({
+        key: 'second.default',
+        recipeId: 'second',
+        ready: [{ expect: 'count', target: 'list.item', count: 2 }],
+        capture: { frame: { target: 'panel', padding: 10 } },
+      }),
+      captureKey: 'second-key',
+    };
+
+    try {
+      const results = await run.captureMany?.([first, second]);
+
+      expect(results).toHaveLength(2);
+      expect(documentRequests).toBe(1);
+      expect(results?.map(({ scene }) => scene.recipeId)).toEqual([
+        'first',
+        'second',
+      ]);
+      expect(results?.[0]?.background).toEqual(results?.[1]?.background);
+      expect(results?.[0]?.scene.captureKey).toBe(first.captureKey);
+      expect(results?.[1]?.scene.captureKey).toBe(second.captureKey);
     } finally {
       await run.close();
     }

@@ -131,6 +131,15 @@ export function validateConfig(config: GuideShotConfig): void {
         'Scenario concurrency keys cannot be empty.',
       );
     }
+    if (
+      scenario.reusePreparedState !== undefined &&
+      typeof scenario.reusePreparedState !== 'boolean'
+    ) {
+      throw new GuideShotError(
+        'RECIPE_SCHEMA_INVALID',
+        'Scenario prepared-state reuse must be a boolean.',
+      );
+    }
   }
   for (const [name, profile] of Object.entries(config.profiles)) {
     if (

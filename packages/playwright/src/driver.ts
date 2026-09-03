@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 
 import {
+  canonicalSerialize,
   GuideShotError,
   isGuideShotError,
   sha256,
@@ -25,6 +26,7 @@ import {
   type Page,
   type Request,
 } from 'playwright';
+import packageJson from '../package.json' with { type: 'json' };
 
 import { executeActions } from './actions.js';
 import { verifyExpectations } from './expectations.js';
@@ -40,7 +42,7 @@ import {
   type TargetErrorContext,
 } from './targets.js';
 
-const DRIVER_VERSION = '0.1.0';
+const DRIVER_VERSION = packageJson.version;
 const DEFAULT_TIMEOUT_MS = 10_000;
 const DEFAULT_NAVIGATION_TIMEOUT_MS = 15_000;
 
@@ -115,6 +117,17 @@ class ChromiumRun implements BrowserRun {
   }
 
   async capture(request: CaptureRequest): Promise<CaptureResult> {
+    const results = await this.captureMany([request]);
+    const result = results[0];
+    if (result === undefined) {
+      throw new GuideShotError('CAPTURE_FAILED', 'Chromium returned no scene.');
+    }
+    return result;
+  }
+
+  async captureMany(
+    requests: readonly CaptureRequest[],
+  ): Promise<readonly CaptureResult[]> {
     if (this.#closed) {
       throw new GuideShotError(
         'CAPTURE_FAILED',
@@ -122,7 +135,11 @@ class ChromiumRun implements BrowserRun {
       );
     }
     throwIfAborted(this.#runOptions.signal);
+    if (requests.length === 0) return [];
+    assertCompatibleRequests(requests);
 
+    const request = requests[0];
+    if (request === undefined) return [];
     const context = await this.#newContext(request);
     const errorContext: TargetErrorContext = {
       recipeId: request.job.recipeId,
@@ -193,99 +210,62 @@ class ChromiumRun implements BrowserRun {
         },
         errorContext,
       );
-      const frameDefinition = requestedFrame(request.job.capture);
-      const requiredTargets = frameTargetIds(frameDefinition);
-      requireVisibleTargets(
-        measurements,
-        requiredTargets,
-        resolver,
-        errorContext,
-      );
-
       const pageState = await measurePage(page);
       const targetRects = Object.fromEntries(
         Object.entries(measurements).map(([id, target]) => [id, target.rect]),
       );
-      const frame = resolveFrameRect({
-        ...(frameDefinition === undefined ? {} : { frame: frameDefinition }),
-        document: pageState.document,
-        viewport: pageState.viewport,
-        targets: targetRects,
-      });
-      if (frame.width <= 0 || frame.height <= 0) {
-        throw new GuideShotError(
-          'CAPTURE_FAILED',
-          'The resolved capture frame is empty.',
-          {
-            ...errorContext,
-            details: {
-              frame: {
-                x: frame.x,
-                y: frame.y,
-                width: frame.width,
-                height: frame.height,
-              },
-            },
-          },
+      const screenshots = new Map<string, Uint8Array>();
+      const results: CaptureResult[] = [];
+
+      for (const current of requests) {
+        const currentErrorContext: TargetErrorContext = {
+          recipeId: current.job.recipeId,
+          jobKey: current.job.key,
+        };
+        const frameDefinition = requestedFrame(current.job.capture);
+        requireVisibleTargets(
+          measurements,
+          frameTargetIds(frameDefinition),
+          resolver,
+          currentErrorContext,
+        );
+        const frame = resolveFrameRect({
+          ...(frameDefinition === undefined ? {} : { frame: frameDefinition }),
+          document: pageState.document,
+          viewport: pageState.viewport,
+          targets: targetRects,
+        });
+        assertFrame(frame, currentErrorContext);
+        guard.throwIfBlocked();
+        const frameKey = canonicalSerialize(frame);
+        let background = screenshots.get(frameKey);
+        if (background === undefined) {
+          background = Uint8Array.from(
+            await page.screenshot({
+              type: 'png',
+              clip: frame,
+              animations: 'disabled',
+              caret: 'hide',
+              scale: 'device',
+              mask: [resolver.privacyLocator()],
+              maskColor: '#000000',
+            }),
+          );
+          screenshots.set(frameKey, background);
+        }
+        guard.throwIfBlocked();
+        results.push(
+          captureResult(
+            current,
+            frame,
+            pageState,
+            measurements,
+            background,
+            this.#environment,
+          ),
         );
       }
-
-      guard.throwIfBlocked();
-      const screenshot = await page.screenshot({
-        type: 'png',
-        clip: frame,
-        animations: 'disabled',
-        caret: 'hide',
-        scale: 'device',
-        mask: [resolver.privacyLocator()],
-        maskColor: '#000000',
-      });
-      guard.throwIfBlocked();
-
-      const background = Uint8Array.from(screenshot);
-      const imageSize = readPngSize(background);
-      const targets: Record<string, SceneTarget> = Object.fromEntries(
-        Object.entries(measurements).map(([id, target]) => [
-          id,
-          {
-            rect: relativeRect(target.rect, frame),
-            visible: target.visible,
-            ...(target.borderRadius === undefined
-              ? {}
-              : { borderRadius: target.borderRadius }),
-          },
-        ]),
-      );
-      const scene = {
-        version: 1 as const,
-        captureKey: request.captureKey,
-        recipeId: request.job.recipeId,
-        variantKey: request.job.variantKey,
-        variants: request.job.variants,
-        frame,
-        viewport: {
-          width: pageState.viewport.width,
-          height: pageState.viewport.height,
-          pixelRatio: pageState.pixelRatio,
-          scrollX: pageState.scrollX,
-          scrollY: pageState.scrollY,
-        },
-        targets,
-        locale: pageState.locale,
-        direction: pageState.direction,
-        ...(pageState.theme === undefined ? {} : { theme: pageState.theme }),
-        safeVariables: request.job.safeVariables,
-        background: {
-          file: `${request.captureKey}.png`,
-          width: imageSize.width,
-          height: imageSize.height,
-          format: 'png' as const,
-          sha256: sha256(background),
-        },
-        environment: this.#environment,
-        sanitized: true as const,
-      };
-      return { scene, background };
+      return results;
     } catch (cause) {
       const blocked = guard.blockedError();
       if (blocked !== undefined) throw blocked;
@@ -333,6 +313,107 @@ class ChromiumRun implements BrowserRun {
       );
     }
   }
+}
+
+function assertCompatibleRequests(requests: readonly CaptureRequest[]): void {
+  const first = requests[0];
+  if (first === undefined) return;
+  const expected = preparationIdentity(first);
+  for (const request of requests.slice(1)) {
+    if (preparationIdentity(request) !== expected) {
+      throw new TypeError(
+        'Batched captures must share browser state, page preparation, readiness, and capture settings.',
+      );
+    }
+  }
+}
+
+function preparationIdentity(request: CaptureRequest): string {
+  const capture = Object.fromEntries(
+    Object.entries(request.job.capture).filter(([key]) => key !== 'frame'),
+  );
+  return canonicalSerialize({
+    profile: request.job.profile,
+    browser: request.job.browser,
+    page: request.job.page,
+    prepare: request.job.prepare,
+    ready: request.job.ready,
+    capture,
+  });
+}
+
+function assertFrame(frame: Rect, context: TargetErrorContext): void {
+  if (frame.width > 0 && frame.height > 0) return;
+  throw new GuideShotError(
+    'CAPTURE_FAILED',
+    'The resolved capture frame is empty.',
+    {
+      ...context,
+      details: {
+        frame: {
+          x: frame.x,
+          y: frame.y,
+          width: frame.width,
+          height: frame.height,
+        },
+      },
+    },
+  );
+}
+
+function captureResult(
+  request: CaptureRequest,
+  frame: Rect,
+  pageState: PageMeasurement,
+  measurements: Readonly<Record<string, SceneTarget>>,
+  background: Uint8Array,
+  environment: BrowserEnvironment,
+): CaptureResult {
+  const imageSize = readPngSize(background);
+  const targets: Record<string, SceneTarget> = Object.fromEntries(
+    Object.entries(measurements).map(([id, target]) => [
+      id,
+      {
+        rect: relativeRect(target.rect, frame),
+        visible: target.visible,
+        ...(target.borderRadius === undefined
+          ? {}
+          : { borderRadius: target.borderRadius }),
+      },
+    ]),
+  );
+  return {
+    scene: {
+      version: 1,
+      captureKey: request.captureKey,
+      recipeId: request.job.recipeId,
+      variantKey: request.job.variantKey,
+      variants: request.job.variants,
+      frame,
+      viewport: {
+        width: pageState.viewport.width,
+        height: pageState.viewport.height,
+        pixelRatio: pageState.pixelRatio,
+        scrollX: pageState.scrollX,
+        scrollY: pageState.scrollY,
+      },
+      targets,
+      locale: pageState.locale,
+      direction: pageState.direction,
+      ...(pageState.theme === undefined ? {} : { theme: pageState.theme }),
+      safeVariables: request.job.safeVariables,
+      background: {
+        file: `${request.captureKey}.png`,
+        width: imageSize.width,
+        height: imageSize.height,
+        format: 'png',
+        sha256: sha256(background),
+      },
+      environment,
+      sanitized: true,
+    },
+    background: Uint8Array.from(background),
+  };
 }
 
 class NavigationGuard {
