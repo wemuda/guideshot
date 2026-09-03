@@ -1,5 +1,13 @@
 # @guideshot/renderer
 
+## 0.1.4
+
+### Patch Changes
+
+- b83d758: Batch compatible stateless recipes and explicitly reusable scenario states through one prepared browser page, reuse byte-identical compositions after a fresh scene validation, and retain isolated renderer pages across jobs.
+- Updated dependencies [b83d758]
+  - @guideshot/core@0.3.0
+
 ## 0.1.3
 
 ### Patch Changes
